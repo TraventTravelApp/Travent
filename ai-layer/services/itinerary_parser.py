@@ -1,6 +1,10 @@
 import json
 import re
+import logging
 from typing import Dict, List, Any
+
+logger = logging.getLogger(__name__)
+
 
 class ItineraryParser:
     def parse(self, claude_response: str) -> Dict[str, Any]:
@@ -8,12 +12,21 @@ class ItineraryParser:
         try:
             json_match = re.search(r'```json\s*(.*?)\s*```', claude_response, re.DOTALL)
             if json_match:
-                return json.loads(json_match.group(1))
+                try:
+                    return json.loads(json_match.group(1))
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse JSON from code block: {e}")
             
-            return json.loads(claude_response)
-        except json.JSONDecodeError:
-            return self._fallback_parse(claude_response)
-    
+            try:
+                return json.loads(claude_response)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse JSON from direct response: {e}")
+                
+        except Exception as e:
+            logger.error(f"Unexpected error during JSON parsing: {e}")
+            
+        return self._fallback_parse(claude_response)
+
     def _fallback_parse(self, text: str) -> Dict[str, Any]:
         """Fallback parser if JSON extraction fails"""
         days = []
@@ -41,6 +54,7 @@ class ItineraryParser:
                 'activities': activities
             })
         
+        # Ensure we always return a complete valid structure
         return {
             'trip_summary': 'Generated itinerary',
             'days': days,

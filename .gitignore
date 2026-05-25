@@ -1,4 +1,4 @@
-gi# Environment variables (contains API keys - DO NOT COMMIT)
+# Environment variables (contains API keys - DO NOT COMMIT)
 .env
 *.env
 !.env.example
@@ -67,3 +67,15 @@ AWSCLIV2.pkg
 keys.txt
 setup-backend.sh
 verify-user.sh
+
+# Serverless build artifacts
+.serverless/
+*.zip
+.requirements.zip
+
+# Vendored Python packages (leaked into repo root by serverless packaging)
+six.py
+typing_extensions.py
+
+# Windows junk files
+nul

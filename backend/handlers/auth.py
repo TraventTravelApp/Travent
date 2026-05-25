@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.dynamodb import get_dynamodb_table
 from utils.response import success_response, error_response
 from utils.error_handler import handle_errors
+from utils.rate_limiter import rate_limit
 
 # Cognito client
 cognito = boto3.client('cognito-idp', region_name='us-east-1')
@@ -70,12 +71,12 @@ def signup(event, context):
         except cognito.exceptions.UsernameExistsException:
             return error_response(400, "User already exists")
         except cognito.exceptions.InvalidPasswordException as e:
-            return error_response(400, f"Invalid password: {str(e)}")
+            return error_response(400, "Invalid password")
         except Exception as e:
-            return error_response(500, f"Cognito error: {str(e)}")
+            return error_response(500, "Authentication service error")
         
     except Exception as e:
-        return error_response(500, str(e))
+        return error_response(500, "Authentication service error")
 
 @handle_errors
 def login(event, context):
@@ -138,12 +139,12 @@ def login(event, context):
             print(f"[AUTH] User not confirmed: {str(e)}")
             return error_response(401, "User email not verified. Please check your email.")
         except Exception as e:
-            print(f"[AUTH] Cognito error: {str(e)}")
-            return error_response(500, f"Cognito error: {str(e)}")
+            print(f"[AUTH] Cognito error: Authentication service error")
+            return error_response(500, "Authentication service error")
 
     except Exception as e:
-        print(f"[AUTH] Unexpected error in login: {str(e)}")
-        return error_response(500, str(e))
+        print(f"[AUTH] Unexpected error in login: Authentication service error")
+        return error_response(500, "Authentication service error")
 
 @handle_errors
 def confirm_signup(event, context):
@@ -173,10 +174,10 @@ def confirm_signup(event, context):
         except cognito.exceptions.ExpiredCodeException:
             return error_response(400, "Verification code expired")
         except Exception as e:
-            return error_response(500, f"Cognito error: {str(e)}")
+            return error_response(500, "Authentication service error")
         
     except Exception as e:
-        return error_response(500, str(e))
+        return error_response(500, "Authentication service error")
 
 @handle_errors
 def resend_confirmation(event, context):
@@ -200,7 +201,7 @@ def resend_confirmation(event, context):
             })
             
         except Exception as e:
-            return error_response(500, f"Cognito error: {str(e)}")
+            return error_response(500, "Authentication service error")
         
     except Exception as e:
-        return error_response(500, str(e))
+        return error_response(500, "Authentication service error")

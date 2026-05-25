@@ -4,30 +4,28 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.dynamodb import get_dynamodb_table
-from utils.auth_utils import verify_token
+from utils.decorators import require_auth
 from utils.response import success_response, error_response
 from services.route_optimizer import optimize_route, calculate_total_distance
 
 trips_table = get_dynamodb_table('trips')
 
+@require_auth
 def add_poi_to_itinerary(event, context):
     """Add a custom POI to trip itinerary"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         trip_id = event['pathParameters']['trip_id']
         body = json.loads(event['body'])
-        
+
         # Verify trip ownership
         response = trips_table.get_item(Key={'trip_id': trip_id})
         if 'Item' not in response:
             return error_response(404, "Trip not found")
-        
+
         trip = response['Item']
-        if trip['user_id'] != user_data['user_id']:
+        if trip['user_id'] != user_id:
             return error_response(403, "Forbidden")
         
         # Extract POI data
@@ -82,7 +80,8 @@ def add_poi_to_itinerary(event, context):
         # Update trip
         trips_table.update_item(
             Key={'trip_id': trip_id},
-            UpdateExpression='SET itinerary = :i',
+            UpdateExpression='SET #itinerary = :i',
+            ExpressionAttributeNames={'#itinerary': 'itinerary'},
             ExpressionAttributeValues={':i': itinerary}
         )
         
@@ -94,24 +93,22 @@ def add_poi_to_itinerary(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def remove_poi_from_itinerary(event, context):
     """Remove a POI from trip itinerary"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         trip_id = event['pathParameters']['trip_id']
         poi_id = event['pathParameters']['poi_id']
-        
+
         # Verify trip ownership
         response = trips_table.get_item(Key={'trip_id': trip_id})
         if 'Item' not in response:
             return error_response(404, "Trip not found")
-        
+
         trip = response['Item']
-        if trip['user_id'] != user_data['user_id']:
+        if trip['user_id'] != user_id:
             return error_response(403, "Forbidden")
         
         # Get current itinerary
@@ -149,7 +146,8 @@ def remove_poi_from_itinerary(event, context):
         # Update trip
         trips_table.update_item(
             Key={'trip_id': trip_id},
-            UpdateExpression='SET itinerary = :i',
+            UpdateExpression='SET #itinerary = :i',
+            ExpressionAttributeNames={'#itinerary': 'itinerary'},
             ExpressionAttributeValues={':i': itinerary}
         )
         
@@ -161,25 +159,23 @@ def remove_poi_from_itinerary(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def update_poi_in_itinerary(event, context):
     """Update a POI in trip itinerary"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         trip_id = event['pathParameters']['trip_id']
         poi_id = event['pathParameters']['poi_id']
         body = json.loads(event['body'])
-        
+
         # Verify trip ownership
         response = trips_table.get_item(Key={'trip_id': trip_id})
         if 'Item' not in response:
             return error_response(404, "Trip not found")
-        
+
         trip = response['Item']
-        if trip['user_id'] != user_data['user_id']:
+        if trip['user_id'] != user_id:
             return error_response(403, "Forbidden")
         
         # Get current itinerary
@@ -224,7 +220,8 @@ def update_poi_in_itinerary(event, context):
         # Update trip
         trips_table.update_item(
             Key={'trip_id': trip_id},
-            UpdateExpression='SET itinerary = :i',
+            UpdateExpression='SET #itinerary = :i',
+            ExpressionAttributeNames={'#itinerary': 'itinerary'},
             ExpressionAttributeValues={':i': itinerary}
         )
         
@@ -236,30 +233,28 @@ def update_poi_in_itinerary(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def reorder_itinerary(event, context):
     """Manually reorder POIs in a day"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         trip_id = event['pathParameters']['trip_id']
         body = json.loads(event['body'])
-        
+
         day = body.get('day')
         poi_order = body.get('poi_order')  # Array of poi_ids in desired order
-        
+
         if not day or not poi_order:
             return error_response(400, "day and poi_order required")
-        
+
         # Verify trip ownership
         response = trips_table.get_item(Key={'trip_id': trip_id})
         if 'Item' not in response:
             return error_response(404, "Trip not found")
-        
+
         trip = response['Item']
-        if trip['user_id'] != user_data['user_id']:
+        if trip['user_id'] != user_id:
             return error_response(403, "Forbidden")
         
         # Get current itinerary
@@ -294,7 +289,8 @@ def reorder_itinerary(event, context):
         # Update trip
         trips_table.update_item(
             Key={'trip_id': trip_id},
-            UpdateExpression='SET itinerary = :i',
+            UpdateExpression='SET #itinerary = :i',
+            ExpressionAttributeNames={'#itinerary': 'itinerary'},
             ExpressionAttributeValues={':i': itinerary}
         )
         

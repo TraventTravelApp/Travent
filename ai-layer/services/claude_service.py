@@ -2,10 +2,27 @@ import boto3
 import json
 import os
 from typing import Dict, Any
+from botocore.config import Config
+import logging
+from botocore.exceptions import ClientError
 
 class ClaudeService:
     def __init__(self):
-        self.bedrock = boto3.client('bedrock-runtime', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+        # Configure retry strategy for Bedrock API calls
+        retry_config = Config(
+            retries={
+                'max_attempts': 3,
+                'mode': 'adaptive'  # Adaptive retry mode with exponential backoff
+            },
+            read_timeout=25,  # Must be less than Lambda timeout
+            connect_timeout=5
+        )
+
+        self.bedrock = boto3.client(
+            'bedrock-runtime',
+            region_name=os.environ.get('AWS_REGION', 'us-east-1'),
+            config=retry_config
+        )
         self.model_id = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-sonnet-4-6-20260217-v1:0')
     
     def generate_itinerary(self, system_prompt: str, user_prompt: str) -> str:

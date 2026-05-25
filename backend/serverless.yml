@@ -2,6 +2,7 @@ service: travel-assistant-backend
 
 plugins:
   - serverless-python-requirements
+  - serverless-offline
 
 provider:
   name: aws
@@ -10,7 +11,6 @@ provider:
   layers:
     - Ref: PythonRequirementsLambdaLayer
   environment:
-    JWT_SECRET: ${env:JWT_SECRET}
     COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
     COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
     S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
@@ -68,12 +68,6 @@ provider:
             - "arn:aws:geo:${self:provider.region}:*:map/*"
             - "arn:aws:geo:${self:provider.region}:*:place-index/*"
             - "arn:aws:geo:${self:provider.region}:*:route-calculator/*"
-        - Effect: Allow
-          Action:
-            - secretsmanager:GetSecretValue
-          Resource:
-            - "arn:aws:secretsmanager:${self:provider.region}:*:secret:tripcraft/jwt-secret-*"
-
 functions:
   signup:
     handler: handlers/auth.signup

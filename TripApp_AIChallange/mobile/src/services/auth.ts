@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { encrypt, decrypt } from '../utils/crypto';
 import { api, ApiResponse } from './api';
 
 export interface SignupRequest {
@@ -62,9 +63,9 @@ export const authService = {
     if (response.success && response.data) {
       await AsyncStorage.setItem('user_id', response.data.user_id);
       await AsyncStorage.setItem('email', response.data.email);
-      await AsyncStorage.setItem('id_token', response.data.id_token);
-      await AsyncStorage.setItem('access_token', response.data.access_token);
-      await AsyncStorage.setItem('refresh_token', response.data.refresh_token);
+      await AsyncStorage.setItem('id_token', encrypt(response.data.id_token));
+      await AsyncStorage.setItem('access_token', encrypt(response.data.access_token));
+      await AsyncStorage.setItem('refresh_token', encrypt(response.data.refresh_token));
     }
 
     return response;
@@ -99,8 +100,43 @@ export const authService = {
    * Check if user is authenticated
    */
   isAuthenticated: async (): Promise<boolean> => {
-    const token = await AsyncStorage.getItem('access_token');
-    return !!token;
+    try {
+      const encryptedToken = await AsyncStorage.getItem('id_token');
+      if (!encryptedToken) {
+        return false;
+      }
+
+      // Decrypt token
+      const token = decrypt(encryptedToken);
+      if (!token) {
+        return false;
+      }
+
+      // Decode JWT payload (second part of token)
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) {
+        return false;
+      }
+
+      // Convert base64url to base64
+      const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+      
+      // Add padding if needed
+      const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+      
+      // Decode base64 string
+      const payloadStr = atob(padded);
+      const payload = JSON.parse(payloadStr);
+
+      // Check if token is expired
+      const expirationTime = payload.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+
+      return expirationTime > currentTime;
+    } catch (error) {
+      console.error('[AUTH] Error validating token:', error);
+      return false; // Fail closed - if we can't validate, treat as unauthenticated
+    }
   },
 
   /**

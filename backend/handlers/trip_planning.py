@@ -9,21 +9,20 @@ import requests
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from utils.response import success_response, error_response
-from utils.auth_utils import extract_user_id
+from utils.decorators import require_auth
 
 AI_LAYER_URL = os.environ.get(
     'AI_LAYER_URL',
     'https://ksalbazufb.execute-api.us-east-1.amazonaws.com/dev/ai/itinerary/generate'
 )
 
+@require_auth
 def create_trip_from_quiz(event, context):
     """
     Complete flow: Quiz answers → Reddit scraper → AI layer → Save trip
     """
     try:
-        user_id = extract_user_id(event)
-        if not user_id:
-            return error_response('Unauthorized', 401)
+        user_id = event['authenticated_user_id']
         
         body = json.loads(event.get('body', '{}'))
         

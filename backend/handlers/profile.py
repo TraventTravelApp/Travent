@@ -4,20 +4,20 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.dynamodb import get_dynamodb_table
-from utils.auth_utils import verify_token
+from utils.decorators import require_auth
 from utils.response import success_response, error_response
+from pydantic import ValidationError as PydanticValidationError
+from models.trip_request import ProfileUpdateRequest
 
 users_table = get_dynamodb_table('users')
 
+@require_auth
 def get_profile(event, context):
     """Get user profile"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
-        response = users_table.get_item(Key={'user_id': user_data['user_id']})
+        user_id = event['authenticated_user_id']
+
+        response = users_table.get_item(Key={'user_id': user_id})
         if 'Item' not in response:
             return error_response(404, "User not found")
         
@@ -31,33 +31,56 @@ def get_profile(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def update_profile(event, context):
     """Update user profile"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         body = json.loads(event['body'])
-        
-        # Build update expression
+
+        # Validate request with Pydantic
+        try:
+            profile_update = ProfileUpdateRequest(**body)
+        except PydanticValidationError as e:
+            errors = []
+            for error in e.errors():
+                field = ' -> '.join(str(loc) for loc in error['loc'])
+                errors.append(f"{field}: {error['msg']}")
+            return error_response(400, f"Validation error: {'; '.join(errors)}")
+
+        # Build update expression with ExpressionAttributeNames
         update_expr = []
         expr_values = {}
-        
-        allowed_fields = ['name', 'bio', 'profile_photo_url', 'preferences']
-        
-        for field in allowed_fields:
-            if field in body:
-                update_expr.append(f'{field} = :{field[0]}')
-                expr_values[f':{field[0]}'] = body[field]
-        
+        expr_names = {}
+
+        if profile_update.name is not None:
+            update_expr.append('#name = :n')
+            expr_values[':n'] = profile_update.name
+            expr_names['#name'] = 'name'
+
+        if profile_update.bio is not None:
+            update_expr.append('#bio = :b')
+            expr_values[':b'] = profile_update.bio
+            expr_names['#bio'] = 'bio'
+
+        if profile_update.profile_photo_url is not None:
+            update_expr.append('#profile_photo_url = :p')
+            expr_values[':p'] = profile_update.profile_photo_url
+            expr_names['#profile_photo_url'] = 'profile_photo_url'
+
+        if profile_update.preferences is not None:
+            update_expr.append('#preferences = :pr')
+            expr_values[':pr'] = profile_update.preferences
+            expr_names['#preferences'] = 'preferences'
+
         if not update_expr:
             return error_response(400, "No valid fields to update")
-        
+
         users_table.update_item(
-            Key={'user_id': user_data['user_id']},
+            Key={'user_id': user_id},
             UpdateExpression='SET ' + ', '.join(update_expr),
+            ExpressionAttributeNames=expr_names,
             ExpressionAttributeValues=expr_values
         )
         
@@ -66,15 +89,13 @@ def update_profile(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def get_settings(event, context):
     """Get user settings"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
-        response = users_table.get_item(Key={'user_id': user_data['user_id']})
+        user_id = event['authenticated_user_id']
+
+        response = users_table.get_item(Key={'user_id': user_id})
         if 'Item' not in response:
             return error_response(404, "User not found")
         
@@ -91,23 +112,25 @@ def get_settings(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+@require_auth
 def update_settings(event, context):
     """Update user settings"""
     try:
-        token = event['headers'].get('Authorization', '').replace('Bearer ', '')
-        user_data = verify_token(token)
-        if not user_data:
-            return error_response(401, "Unauthorized")
-        
+        user_id = event['authenticated_user_id']
+
         body = json.loads(event['body'])
         settings = body.get('settings')
-        
+
         if not settings:
             return error_response(400, "Settings required")
-        
+
+        if not isinstance(settings, dict):
+            return error_response(400, "Settings must be an object")
+
         users_table.update_item(
-            Key={'user_id': user_data['user_id']},
-            UpdateExpression='SET settings = :s',
+            Key={'user_id': user_id},
+            UpdateExpression='SET #settings = :s',
+            ExpressionAttributeNames={'#settings': 'settings'},
             ExpressionAttributeValues={':s': settings}
         )
         

@@ -5,7 +5,6 @@ console: false
 
 plugins:
   - serverless-dotenv-plugin
-  - serverless-python-requirements
 
 provider:
   name: aws
@@ -13,9 +12,10 @@ provider:
   region: us-east-1
   stage: ${opt:stage, 'dev'}
   environment:
-    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-6
+    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-6-20260217-v1:0
     DYNAMODB_TABLE_NAME: trip-planner-trips
-    JWT_SECRET: fsu-hackathon-2024-secret-key
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
   iam:
     role:
       statements:
@@ -28,20 +28,15 @@ provider:
             - dynamodb:PutItem
             - dynamodb:GetItem
             - dynamodb:UpdateItem
-          Resource: 
+          Resource:
             - arn:aws:dynamodb:us-east-1:*:table/trip-planner-trips
-
 functions:
   generateItinerary:
     handler: handlers/itinerary.generate
-    timeout: 60
+    timeout: 25
     events:
       - http:
           path: /ai/itinerary/generate
           method: post
           cors: true
 
-custom:
-  pythonRequirements:
-    dockerizePip: false
-    slim: true
