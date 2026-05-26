@@ -17,12 +17,13 @@ ENV/
 # AWS
 .aws/
 
-# IDE
+# IDE / local agent config
 .vscode/
 .idea/
 *.swp
 *.swo
 .DS_Store
+.claude/
 
 # Backup files
 pois_backup.json
