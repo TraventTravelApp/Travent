@@ -1,0 +1,346 @@
+service: travel-assistant-backend
+
+plugins:
+  - serverless-python-requirements
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  layers:
+    - Ref: PythonRequirementsLambdaLayer
+  environment:
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+    S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+    BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-3-5-sonnet-20241022-v2:0'}
+    LOCATION_MAP_NAME: ${env:LOCATION_MAP_NAME, 'TripMapView'}
+    LOCATION_PLACE_INDEX_NAME: ${env:LOCATION_PLACE_INDEX_NAME, 'TripPlaceIndex'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/users"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/trips"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/travel-pois"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/trip-photos"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/*/index/*"
+        - Effect: Allow
+          Action:
+            - cognito-idp:SignUp
+            - cognito-idp:InitiateAuth
+            - cognito-idp:ConfirmSignUp
+            - cognito-idp:ResendConfirmationCode
+            - cognito-idp:GetUser
+          Resource:
+            - "arn:aws:cognito-idp:${self:provider.region}:*:userpool/*"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:PutObjectAcl
+          Resource:
+            - "arn:aws:s3:::${env:S3_BUCKET_NAME}/*"
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - geo:GetMapTile
+            - geo:GetMapStyleDescriptor
+            - geo:GetMapSprites
+            - geo:GetMapGlyphs
+            - geo:SearchPlaceIndexForText
+            - geo:SearchPlaceIndexForPosition
+            - geo:CalculateRoute
+          Resource:
+            - "arn:aws:geo:${self:provider.region}:*:map/*"
+            - "arn:aws:geo:${self:provider.region}:*:place-index/*"
+            - "arn:aws:geo:${self:provider.region}:*:route-calculator/*"
+functions:
+  signup:
+    handler: handlers/auth.signup
+    events:
+      - http:
+          path: auth/signup
+          method: post
+          cors: true
+
+  login:
+    handler: handlers/auth.login
+    events:
+      - http:
+          path: auth/login
+          method: post
+          cors: true
+
+  confirmSignup:
+    handler: handlers/auth.confirm_signup
+    events:
+      - http:
+          path: auth/confirm
+          method: post
+          cors: true
+
+  resendConfirmation:
+    handler: handlers/auth.resend_confirmation
+    events:
+      - http:
+          path: auth/resend
+          method: post
+          cors: true
+
+  submitQuiz:
+    handler: handlers/quiz.submit_quiz
+    events:
+      - http:
+          path: quiz/submit
+          method: post
+          cors: true
+
+  getQuiz:
+    handler: handlers/quiz.get_quiz
+    events:
+      - http:
+          path: quiz
+          method: get
+          cors: true
+
+  createTrip:
+    handler: handlers/trips.create_trip
+    events:
+      - http:
+          path: trips
+          method: post
+          cors: true
+
+  listTrips:
+    handler: handlers/trips.list_trips
+    events:
+      - http:
+          path: trips
+          method: get
+          cors: true
+
+  getTrip:
+    handler: handlers/trips.get_trip
+    events:
+      - http:
+          path: trips/{trip_id}
+          method: get
+          cors: true
+
+  updateTrip:
+    handler: handlers/trips.update_trip
+    events:
+      - http:
+          path: trips/{trip_id}
+          method: put
+          cors: true
+
+  deleteTrip:
+    handler: handlers/trips.delete_trip
+    events:
+      - http:
+          path: trips/{trip_id}
+          method: delete
+          cors: true
+
+  uploadProfilePhoto:
+    handler: handlers/uploads.upload_profile_photo
+    events:
+      - http:
+          path: uploads/profile-photo
+          method: post
+          cors: true
+
+  uploadTripPhoto:
+    handler: handlers/uploads.upload_trip_photo
+    events:
+      - http:
+          path: uploads/trip-photo
+          method: post
+          cors: true
+
+  getTripPhotos:
+    handler: handlers/uploads.get_trip_photos
+    events:
+      - http:
+          path: trips/{trip_id}/photos
+          method: get
+          cors: true
+
+  uploadPoiImage:
+    handler: handlers/uploads.upload_poi_image
+    events:
+      - http:
+          path: uploads/poi-image
+          method: post
+          cors: true
+
+  uploadItineraryPdf:
+    handler: handlers/uploads.upload_itinerary_pdf
+    events:
+      - http:
+          path: uploads/itinerary-pdf
+          method: post
+          cors: true
+
+  deleteUpload:
+    handler: handlers/uploads.delete_upload
+    events:
+      - http:
+          path: uploads
+          method: delete
+          cors: true
+
+  getProfile:
+    handler: handlers/profile.get_profile
+    events:
+      - http:
+          path: profile
+          method: get
+          cors: true
+
+  updateProfile:
+    handler: handlers/profile.update_profile
+    events:
+      - http:
+          path: profile
+          method: put
+          cors: true
+
+  getSettings:
+    handler: handlers/profile.get_settings
+    events:
+      - http:
+          path: settings
+          method: get
+          cors: true
+
+  updateSettings:
+    handler: handlers/profile.update_settings
+    events:
+      - http:
+          path: settings
+          method: put
+          cors: true
+
+  addPoiToItinerary:
+    handler: handlers/itinerary.add_poi_to_itinerary
+    events:
+      - http:
+          path: trips/{trip_id}/itinerary/pois
+          method: post
+          cors: true
+
+  removePoiFromItinerary:
+    handler: handlers/itinerary.remove_poi_from_itinerary
+    events:
+      - http:
+          path: trips/{trip_id}/itinerary/pois/{poi_id}
+          method: delete
+          cors: true
+
+  updatePoiInItinerary:
+    handler: handlers/itinerary.update_poi_in_itinerary
+    events:
+      - http:
+          path: trips/{trip_id}/itinerary/pois/{poi_id}
+          method: put
+          cors: true
+
+  reorderItinerary:
+    handler: handlers/itinerary.reorder_itinerary
+    events:
+      - http:
+          path: trips/{trip_id}/itinerary/reorder
+          method: post
+          cors: true
+
+  getTripRecommendations:
+    handler: handlers/trip_planning.get_trip_recommendations
+    events:
+      - http:
+          path: trips/{trip_id}/recommendations
+          method: get
+          cors: true
+
+  calculateTripCosts:
+    handler: handlers/trip_planning.calculate_trip_costs
+    events:
+      - http:
+          path: trips/{trip_id}/costs
+          method: get
+          cors: true
+
+  generateAiItinerary:
+    handler: handlers/ai_itinerary.generate
+    timeout: 25
+    events:
+      - http:
+          path: ai/itinerary/generate
+          method: post
+          cors: true
+
+  searchPlaces:
+    handler: handlers/location.search_places
+    events:
+      - http:
+          path: location/search
+          method: get
+          cors: true
+
+custom:
+  pythonRequirements:
+    dockerizePip: false
+    slim: false
+    strip: false
+    layer: true
+    zip: false
+    fileName: requirements.txt
+    pythonBin: "C:\\Users\\Emma Berry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+    pipCmdExtraArgs:
+      - "--platform manylinux2014_x86_64"
+      - "--only-binary=:all:"
+      - "--python-version 312"
+      - "--implementation cp"
+      - "--abi cp312"
+
+resources:
+  Resources:
+    TripMapView:
+      Type: AWS::Location::Map
+      Properties:
+        Configuration:
+          Style: VectorEsriStreets
+        MapName: ${self:provider.environment.LOCATION_MAP_NAME}
+        Description: Map for trip visualization
+        PricingPlan: RequestBasedUsage
+
+    TripPlaceIndex:
+      Type: AWS::Location::PlaceIndex
+      Properties:
+        DataSource: Esri
+        IndexName: ${self:provider.environment.LOCATION_PLACE_INDEX_NAME}
+        Description: Place index for POI search
+        PricingPlan: RequestBasedUsage
+
+    TripRouteCalculator:
+      Type: AWS::Location::RouteCalculator
+      Properties:
+        CalculatorName: TripRouteCalculator
+        DataSource: Esri
+        Description: Route calculator for trip directions
+        PricingPlan: RequestBasedUsage

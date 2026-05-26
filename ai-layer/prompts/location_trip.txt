@@ -1,0 +1,24 @@
+Create a detailed {duration}-day itinerary for {destination}.
+
+User Profile:
+- Interests: {interests}
+- Activity Preferences: {activity_preferences}
+- Budget: {budget}
+- Day Intensity: {intensity}/10 (1=relaxed, 10=packed schedule)
+- Travel Group: {group_type}
+
+{recommended_places_section}
+
+Requirements:
+1. Plan {duration} full days of activities
+2. Match activities to the user's interests and preferences
+3. Keep the daily schedule intensity at {intensity}/10
+4. Stay within a {budget} budget
+5. Consider the {group_type} travel style
+6. Include specific locations, addresses when possible
+7. Provide realistic time estimates and costs
+8. Add meal suggestions that fit the vibe
+9. Include transportation tips between activities
+10. PRIORITIZE the recommended local spots above - these are hidden gems from locals, not typical tourist traps
+
+Return the itinerary in the JSON format specified in your system prompt.

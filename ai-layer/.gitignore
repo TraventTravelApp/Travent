@@ -1,0 +1,37 @@
+# Environment variables (contains secrets!)
+.env
+
+# Deployment artifacts
+package/
+lambda-package.zip
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Node modules (serverless)
+node_modules/
+.serverless/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AWS
+.aws/

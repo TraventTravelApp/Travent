@@ -1,0 +1,81 @@
+# Environment variables (contains API keys - DO NOT COMMIT)
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# AWS
+.aws/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Backup files
+pois_backup.json
+*.json.bak
+
+# Dangerous scripts (can delete data)
+scraper/clear_pois.py
+
+# Infrastructure setup scripts (run manually, don't commit)
+infrastructure/setup_cognito.py
+infrastructure/setup_s3.py
+
+# Documentation files
+AWS_LOCATION_SERVICE_GUIDE.md
+BACKEND_API_REFERENCE.md
+
+# Logs
+*.log
+
+# Node.js / Frontend / Mobile
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.expo/
+.expo-shared/
+dist/
+build/
+*.tgz
+
+# Mobile specific
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+AWSCLIV2.pkg
+
+keys.txt
+setup-backend.sh
+verify-user.sh
+
+# Serverless build artifacts
+.serverless/
+*.zip
+.requirements.zip
+
+# Vendored Python packages (leaked into repo root by serverless packaging)
+six.py
+typing_extensions.py
+
+# Windows junk files
+nul

@@ -1,0 +1,980 @@
+{
+  "/Users/emmaberry/Chronicle2/backend/serverless.yml": {
+    "versionFramework": "4.33.0",
+    "servicePath": "/Users/emmaberry/Chronicle2/backend/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "travel-assistant-backend",
+      "provider": {
+        "name": "aws",
+        "runtime": "python3.12",
+        "region": "us-east-1",
+        "environment": {
+          "JWT_SECRET": "<REDACTED>",
+          "COGNITO_USER_POOL_ID": "us-east-1_JjY1YkS9X",
+          "COGNITO_CLIENT_ID": "4isph133ce0jhtgj6g78g5qk8d",
+          "S3_BUCKET_NAME": "chronicle-uploads-1772494322",
+          "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "LOCATION_MAP_NAME": "TripMapView",
+          "LOCATION_PLACE_INDEX_NAME": "TripPlaceIndex"
+        },
+        "iam": {
+          "role": {
+            "statements": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "dynamodb:Query",
+                  "dynamodb:Scan",
+                  "dynamodb:GetItem",
+                  "dynamodb:PutItem",
+                  "dynamodb:UpdateItem",
+                  "dynamodb:DeleteItem"
+                ],
+                "Resource": [
+                  "arn:aws:dynamodb:us-east-1:*:table/users",
+                  "arn:aws:dynamodb:us-east-1:*:table/trips",
+                  "arn:aws:dynamodb:us-east-1:*:table/travel-pois",
+                  "arn:aws:dynamodb:us-east-1:*:table/*/index/*"
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "cognito-idp:SignUp",
+                  "cognito-idp:InitiateAuth",
+                  "cognito-idp:ConfirmSignUp",
+                  "cognito-idp:ResendConfirmationCode",
+                  "cognito-idp:GetUser"
+                ],
+                "Resource": "arn:aws:cognito-idp:us-east-1:*:userpool/*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:DeleteObject",
+                  "s3:PutObjectAcl"
+                ],
+                "Resource": "arn:aws:s3:::chronicle-uploads-1772494322/*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "bedrock:InvokeModel"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "geo:GetMapTile",
+                  "geo:GetMapStyleDescriptor",
+                  "geo:GetMapSprites",
+                  "geo:GetMapGlyphs",
+                  "geo:SearchPlaceIndexForText",
+                  "geo:SearchPlaceIndexForPosition",
+                  "geo:CalculateRoute"
+                ],
+                "Resource": [
+                  "arn:aws:geo:us-east-1:*:map/*",
+                  "arn:aws:geo:us-east-1:*:place-index/*",
+                  "arn:aws:geo:us-east-1:*:route-calculator/*"
+                ]
+              }
+            ]
+          }
+        },
+        "stage": "dev",
+        "versionFunctions": true,
+        "remoteFunctionData": {
+          "Configuration": {
+            "FunctionName": "travel-assistant-backend-dev-generateAiItinerary",
+            "FunctionArn": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-generateAiItinerary",
+            "Runtime": "python3.12",
+            "Role": "arn:aws:iam::675254204118:role/travel-assistant-backend-dev-us-east-1-lambdaRole",
+            "Handler": "handlers/ai_itinerary.generate",
+            "CodeSize": 14970952,
+            "Description": "",
+            "Timeout": 60,
+            "MemorySize": 1024,
+            "LastModified": "2026-03-03T00:50:30.000+0000",
+            "CodeSha256": "zRysvcOBmwoPllbeJX1oCxY7Wb9bY3fUS8JHgOaQ5dg=",
+            "Version": "$LATEST",
+            "VpcConfig": {
+              "SubnetIds": [],
+              "SecurityGroupIds": [],
+              "VpcId": "",
+              "Ipv6AllowedForDualStack": false
+            },
+            "Environment": {
+              "Variables": {
+                "LOCATION_PLACE_INDEX_NAME": "TripPlaceIndex",
+                "JWT_SECRET": "<REDACTED>",
+                "LOCATION_MAP_NAME": "TripMapView",
+                "S3_BUCKET_NAME": "chronicle-uploads-1772494322",
+                "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+                "COGNITO_CLIENT_ID": "4isph133ce0jhtgj6g78g5qk8d",
+                "COGNITO_USER_POOL_ID": "us-east-1_JjY1YkS9X"
+              }
+            },
+            "KMSKeyArn": null,
+            "TracingConfig": {
+              "Mode": "PassThrough"
+            },
+            "MasterArn": null,
+            "RevisionId": "9f8a8a5a-6e72-4551-a9df-5588444d33e3",
+            "State": "Active",
+            "StateReason": null,
+            "StateReasonCode": null,
+            "LastUpdateStatus": "Successful",
+            "LastUpdateStatusReason": null,
+            "LastUpdateStatusReasonCode": null,
+            "PackageType": "Zip",
+            "SigningProfileVersionArn": null,
+            "SigningJobArn": null,
+            "Architectures": [
+              "x86_64"
+            ],
+            "EphemeralStorage": {
+              "Size": 512
+            },
+            "SnapStart": {
+              "ApplyOn": "None",
+              "OptimizationStatus": "Off"
+            },
+            "RuntimeVersionConfig": {
+              "RuntimeVersionArn": "arn:aws:lambda:us-east-1::runtime:27990c3d0965bea97240f3380b8d623b692705303bbde4c31fb02fa7daa05453"
+            },
+            "LoggingConfig": {
+              "LogFormat": "Text",
+              "ApplicationLogLevel": null,
+              "SystemLogLevel": null,
+              "LogGroup": "/aws/lambda/travel-assistant-backend-dev-generateAiItinerary"
+            },
+            "Layers": []
+          },
+          "Code": {
+            "RepositoryType": "S3",
+            "Location": "https://prod-04-2014-tasks.s3.us-east-1.amazonaws.com/snapshots/675254204118/travel-assistant-backend-dev-generateAiItinerary-a7bfddf6-fee1-4937-b1c7-9abb8a522dcd?versionId=wr8DWgS.R0aI.Pnof4zkSZYF7RYIKXQV&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEMr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIQCSO1H3Ijgi9Ps7E6dX8E%2FqnQhmjie1C8afqHTeHJjL3gIgQtKm7UCZLaMPPprtEdoqpeFZOkoD8cp04c5lBazLYOEqlAIIk%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw3NDk2Nzg5MDI4MzkiDHW0RYHrb1yS6If7%2FyroAY5WKJ%2B8EVp5%2B2TJf97nIt4U0aX8IHx7TuSmPJrZNV9sTuRGWPO0lSvi1IiYMfdbGHY2sZ2j%2BiHY6%2B07qLc53wjxi9O6yK3F%2FC%2BhrAu%2FiEWf5e3TSDnjUModhDGx3i0dKPhfahNbwdwXAskWfKmd6ByWg5MEEf%2B%2FcGQxv%2BBZ22uNB7ETABGm2tkfgpOu8X0LOjndtGzMS5KOrfk1x9NQtfJz0GP1Fzrkqndpaktby8ChDiYKINAzIziFuW3hSsjXp8vx4qIXisQhpRURfuur4thwdlyvqNNTof%2BLXbTmoEUEPeNspgf7M0cw6%2FeYzQY6jQF8gM2jrC7n2IERWZPvNudPAbA8KKNkcc2Tn23z0unrETcixUTo%2F6axQV%2BOOG1X8j24%2F%2F%2Fm4wAwMl6AzvEwCsuQp%2FreE00lx2b%2Fl2xEKDfL0Lb8buZKwYZMo8I8cQP%2FLUFJJdkdg3MpKu80o5DM0m%2B7%2B74vtDhCRfBHyi4TknmVIR9tVW0kPfSB6eoKOuc%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260303T015149Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIA25DCYHY3QWALLDUD%2F20260303%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=1f0693a448d9ab29c33438bc29909a3ef7bada8580d82fda9932791952057862",
+            "ImageUri": null,
+            "ResolvedImageUri": null
+          },
+          "Tags": {
+            "aws:cloudformation:stack-name": "travel-assistant-backend-dev",
+            "aws:cloudformation:stack-id": "arn:aws:cloudformation:us-east-1:675254204118:stack/travel-assistant-backend-dev/771a3ef0-168b-11f1-81c9-0affea9c1a41",
+            "STAGE": "dev",
+            "aws:cloudformation:logical-id": "GenerateAiItineraryLambdaFunction"
+          }
+        }
+      },
+      "functions": {
+        "signup": {
+          "handler": "handlers/auth.signup",
+          "events": [
+            {
+              "http": {
+                "path": "auth/signup",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-signup",
+          "package": {}
+        },
+        "login": {
+          "handler": "handlers/auth.login",
+          "events": [
+            {
+              "http": {
+                "path": "auth/login",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-login",
+          "package": {}
+        },
+        "confirmSignup": {
+          "handler": "handlers/auth.confirm_signup",
+          "events": [
+            {
+              "http": {
+                "path": "auth/confirm",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-confirmSignup",
+          "package": {}
+        },
+        "resendConfirmation": {
+          "handler": "handlers/auth.resend_confirmation",
+          "events": [
+            {
+              "http": {
+                "path": "auth/resend",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-resendConfirmation",
+          "package": {}
+        },
+        "submitQuiz": {
+          "handler": "handlers/quiz.submit_quiz",
+          "events": [
+            {
+              "http": {
+                "path": "quiz/submit",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-submitQuiz",
+          "package": {}
+        },
+        "getQuiz": {
+          "handler": "handlers/quiz.get_quiz",
+          "events": [
+            {
+              "http": {
+                "path": "quiz",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-getQuiz",
+          "package": {}
+        },
+        "createTrip": {
+          "handler": "handlers/trips.create_trip",
+          "events": [
+            {
+              "http": {
+                "path": "trips",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-createTrip",
+          "package": {}
+        },
+        "listTrips": {
+          "handler": "handlers/trips.list_trips",
+          "events": [
+            {
+              "http": {
+                "path": "trips",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-listTrips",
+          "package": {}
+        },
+        "getTrip": {
+          "handler": "handlers/trips.get_trip",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-getTrip",
+          "package": {}
+        },
+        "updateTrip": {
+          "handler": "handlers/trips.update_trip",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}",
+                "method": "put",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-updateTrip",
+          "package": {}
+        },
+        "deleteTrip": {
+          "handler": "handlers/trips.delete_trip",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}",
+                "method": "delete",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-deleteTrip",
+          "package": {}
+        },
+        "uploadProfilePhoto": {
+          "handler": "handlers/uploads.upload_profile_photo",
+          "events": [
+            {
+              "http": {
+                "path": "uploads/profile-photo",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-uploadProfilePhoto",
+          "package": {}
+        },
+        "uploadTripPhoto": {
+          "handler": "handlers/uploads.upload_trip_photo",
+          "events": [
+            {
+              "http": {
+                "path": "uploads/trip-photo",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-uploadTripPhoto",
+          "package": {}
+        },
+        "uploadPoiImage": {
+          "handler": "handlers/uploads.upload_poi_image",
+          "events": [
+            {
+              "http": {
+                "path": "uploads/poi-image",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-uploadPoiImage",
+          "package": {}
+        },
+        "uploadItineraryPdf": {
+          "handler": "handlers/uploads.upload_itinerary_pdf",
+          "events": [
+            {
+              "http": {
+                "path": "uploads/itinerary-pdf",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-uploadItineraryPdf",
+          "package": {}
+        },
+        "deleteUpload": {
+          "handler": "handlers/uploads.delete_upload",
+          "events": [
+            {
+              "http": {
+                "path": "uploads",
+                "method": "delete",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-deleteUpload",
+          "package": {}
+        },
+        "getProfile": {
+          "handler": "handlers/profile.get_profile",
+          "events": [
+            {
+              "http": {
+                "path": "profile",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-getProfile",
+          "package": {}
+        },
+        "updateProfile": {
+          "handler": "handlers/profile.update_profile",
+          "events": [
+            {
+              "http": {
+                "path": "profile",
+                "method": "put",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-updateProfile",
+          "package": {}
+        },
+        "getSettings": {
+          "handler": "handlers/profile.get_settings",
+          "events": [
+            {
+              "http": {
+                "path": "settings",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-getSettings",
+          "package": {}
+        },
+        "updateSettings": {
+          "handler": "handlers/profile.update_settings",
+          "events": [
+            {
+              "http": {
+                "path": "settings",
+                "method": "put",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-updateSettings",
+          "package": {}
+        },
+        "addPoiToItinerary": {
+          "handler": "handlers/itinerary.add_poi_to_itinerary",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/itinerary/pois",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-addPoiToItinerary",
+          "package": {}
+        },
+        "removePoiFromItinerary": {
+          "handler": "handlers/itinerary.remove_poi_from_itinerary",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/itinerary/pois/{poi_id}",
+                "method": "delete",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-removePoiFromItinerary",
+          "package": {}
+        },
+        "updatePoiInItinerary": {
+          "handler": "handlers/itinerary.update_poi_in_itinerary",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/itinerary/pois/{poi_id}",
+                "method": "put",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-updatePoiInItinerary",
+          "package": {}
+        },
+        "reorderItinerary": {
+          "handler": "handlers/itinerary.reorder_itinerary",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/itinerary/reorder",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-reorderItinerary",
+          "package": {}
+        },
+        "getTripRecommendations": {
+          "handler": "handlers/trip_planning.get_trip_recommendations",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/recommendations",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-getTripRecommendations",
+          "package": {}
+        },
+        "calculateTripCosts": {
+          "handler": "handlers/trip_planning.calculate_trip_costs",
+          "events": [
+            {
+              "http": {
+                "path": "trips/{trip_id}/costs",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-calculateTripCosts",
+          "package": {}
+        },
+        "generateAiItinerary": {
+          "handler": "handlers/ai_itinerary.generate",
+          "timeout": 60,
+          "events": [
+            {
+              "http": {
+                "path": "ai/itinerary/generate",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-generateAiItinerary",
+          "module": ".",
+          "package": {
+            "artifact": ".serverless/generateAiItinerary.zip"
+          }
+        },
+        "searchPlaces": {
+          "handler": "handlers/location.search_places",
+          "events": [
+            {
+              "http": {
+                "path": "location/search",
+                "method": "get",
+                "cors": true
+              }
+            }
+          ],
+          "name": "travel-assistant-backend-dev-searchPlaces",
+          "package": {}
+        }
+      },
+      "custom": {
+        "pythonRequirements": {}
+      },
+      "resources": {
+        "Resources": {
+          "TripMapView": {
+            "Type": "AWS::Location::Map",
+            "Properties": {
+              "Configuration": {
+                "Style": "VectorEsriStreets"
+              },
+              "MapName": "TripMapView",
+              "Description": "Map for trip visualization",
+              "PricingPlan": "RequestBasedUsage"
+            }
+          },
+          "TripPlaceIndex": {
+            "Type": "AWS::Location::PlaceIndex",
+            "Properties": {
+              "DataSource": "Esri",
+              "IndexName": "TripPlaceIndex",
+              "Description": "Place index for POI search",
+              "PricingPlan": "RequestBasedUsage"
+            }
+          },
+          "TripRouteCalculator": {
+            "Type": "AWS::Location::RouteCalculator",
+            "Properties": {
+              "CalculatorName": "TripRouteCalculator",
+              "DataSource": "Esri",
+              "Description": "Route calculator for trip directions",
+              "PricingPlan": "RequestBasedUsage"
+            }
+          }
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "python3.12",
+      "region": "us-east-1",
+      "environment": {
+        "JWT_SECRET": "<REDACTED>",
+        "COGNITO_USER_POOL_ID": "us-east-1_JjY1YkS9X",
+        "COGNITO_CLIENT_ID": "4isph133ce0jhtgj6g78g5qk8d",
+        "S3_BUCKET_NAME": "chronicle-uploads-1772494322",
+        "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "LOCATION_MAP_NAME": "TripMapView",
+        "LOCATION_PLACE_INDEX_NAME": "TripPlaceIndex"
+      },
+      "iam": {
+        "role": {
+          "statements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem"
+              ],
+              "Resource": [
+                "arn:aws:dynamodb:us-east-1:*:table/users",
+                "arn:aws:dynamodb:us-east-1:*:table/trips",
+                "arn:aws:dynamodb:us-east-1:*:table/travel-pois",
+                "arn:aws:dynamodb:us-east-1:*:table/*/index/*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:SignUp",
+                "cognito-idp:InitiateAuth",
+                "cognito-idp:ConfirmSignUp",
+                "cognito-idp:ResendConfirmationCode",
+                "cognito-idp:GetUser"
+              ],
+              "Resource": "arn:aws:cognito-idp:us-east-1:*:userpool/*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": "arn:aws:s3:::chronicle-uploads-1772494322/*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "bedrock:InvokeModel"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "geo:GetMapTile",
+                "geo:GetMapStyleDescriptor",
+                "geo:GetMapSprites",
+                "geo:GetMapGlyphs",
+                "geo:SearchPlaceIndexForText",
+                "geo:SearchPlaceIndexForPosition",
+                "geo:CalculateRoute"
+              ],
+              "Resource": [
+                "arn:aws:geo:us-east-1:*:map/*",
+                "arn:aws:geo:us-east-1:*:place-index/*",
+                "arn:aws:geo:us-east-1:*:route-calculator/*"
+              ]
+            }
+          ]
+        }
+      },
+      "stage": "dev",
+      "versionFunctions": true,
+      "remoteFunctionData": {
+        "Configuration": {
+          "FunctionName": "travel-assistant-backend-dev-generateAiItinerary",
+          "FunctionArn": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-generateAiItinerary",
+          "Runtime": "python3.12",
+          "Role": "arn:aws:iam::675254204118:role/travel-assistant-backend-dev-us-east-1-lambdaRole",
+          "Handler": "handlers/ai_itinerary.generate",
+          "CodeSize": 14970952,
+          "Description": "",
+          "Timeout": 60,
+          "MemorySize": 1024,
+          "LastModified": "2026-03-03T00:50:30.000+0000",
+          "CodeSha256": "zRysvcOBmwoPllbeJX1oCxY7Wb9bY3fUS8JHgOaQ5dg=",
+          "Version": "$LATEST",
+          "VpcConfig": {
+            "SubnetIds": [],
+            "SecurityGroupIds": [],
+            "VpcId": "",
+            "Ipv6AllowedForDualStack": false
+          },
+          "Environment": {
+            "Variables": {
+              "LOCATION_PLACE_INDEX_NAME": "TripPlaceIndex",
+              "JWT_SECRET": "<REDACTED>",
+              "LOCATION_MAP_NAME": "TripMapView",
+              "S3_BUCKET_NAME": "chronicle-uploads-1772494322",
+              "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+              "COGNITO_CLIENT_ID": "4isph133ce0jhtgj6g78g5qk8d",
+              "COGNITO_USER_POOL_ID": "us-east-1_JjY1YkS9X"
+            }
+          },
+          "KMSKeyArn": null,
+          "TracingConfig": {
+            "Mode": "PassThrough"
+          },
+          "MasterArn": null,
+          "RevisionId": "9f8a8a5a-6e72-4551-a9df-5588444d33e3",
+          "State": "Active",
+          "StateReason": null,
+          "StateReasonCode": null,
+          "LastUpdateStatus": "Successful",
+          "LastUpdateStatusReason": null,
+          "LastUpdateStatusReasonCode": null,
+          "PackageType": "Zip",
+          "SigningProfileVersionArn": null,
+          "SigningJobArn": null,
+          "Architectures": [
+            "x86_64"
+          ],
+          "EphemeralStorage": {
+            "Size": 512
+          },
+          "SnapStart": {
+            "ApplyOn": "None",
+            "OptimizationStatus": "Off"
+          },
+          "RuntimeVersionConfig": {
+            "RuntimeVersionArn": "arn:aws:lambda:us-east-1::runtime:27990c3d0965bea97240f3380b8d623b692705303bbde4c31fb02fa7daa05453"
+          },
+          "LoggingConfig": {
+            "LogFormat": "Text",
+            "ApplicationLogLevel": null,
+            "SystemLogLevel": null,
+            "LogGroup": "/aws/lambda/travel-assistant-backend-dev-generateAiItinerary"
+          },
+          "Layers": []
+        },
+        "Code": {
+          "RepositoryType": "S3",
+          "Location": "https://prod-04-2014-tasks.s3.us-east-1.amazonaws.com/snapshots/675254204118/travel-assistant-backend-dev-generateAiItinerary-a7bfddf6-fee1-4937-b1c7-9abb8a522dcd?versionId=wr8DWgS.R0aI.Pnof4zkSZYF7RYIKXQV&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEMr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIQCSO1H3Ijgi9Ps7E6dX8E%2FqnQhmjie1C8afqHTeHJjL3gIgQtKm7UCZLaMPPprtEdoqpeFZOkoD8cp04c5lBazLYOEqlAIIk%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw3NDk2Nzg5MDI4MzkiDHW0RYHrb1yS6If7%2FyroAY5WKJ%2B8EVp5%2B2TJf97nIt4U0aX8IHx7TuSmPJrZNV9sTuRGWPO0lSvi1IiYMfdbGHY2sZ2j%2BiHY6%2B07qLc53wjxi9O6yK3F%2FC%2BhrAu%2FiEWf5e3TSDnjUModhDGx3i0dKPhfahNbwdwXAskWfKmd6ByWg5MEEf%2B%2FcGQxv%2BBZ22uNB7ETABGm2tkfgpOu8X0LOjndtGzMS5KOrfk1x9NQtfJz0GP1Fzrkqndpaktby8ChDiYKINAzIziFuW3hSsjXp8vx4qIXisQhpRURfuur4thwdlyvqNNTof%2BLXbTmoEUEPeNspgf7M0cw6%2FeYzQY6jQF8gM2jrC7n2IERWZPvNudPAbA8KKNkcc2Tn23z0unrETcixUTo%2F6axQV%2BOOG1X8j24%2F%2F%2Fm4wAwMl6AzvEwCsuQp%2FreE00lx2b%2Fl2xEKDfL0Lb8buZKwYZMo8I8cQP%2FLUFJJdkdg3MpKu80o5DM0m%2B7%2B74vtDhCRfBHyi4TknmVIR9tVW0kPfSB6eoKOuc%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260303T015149Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIA25DCYHY3QWALLDUD%2F20260303%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=1f0693a448d9ab29c33438bc29909a3ef7bada8580d82fda9932791952057862",
+          "ImageUri": null,
+          "ResolvedImageUri": null
+        },
+        "Tags": {
+          "aws:cloudformation:stack-name": "travel-assistant-backend-dev",
+          "aws:cloudformation:stack-id": "arn:aws:cloudformation:us-east-1:675254204118:stack/travel-assistant-backend-dev/771a3ef0-168b-11f1-81c9-0affea9c1a41",
+          "STAGE": "dev",
+          "aws:cloudformation:logical-id": "GenerateAiItineraryLambdaFunction"
+        }
+      }
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: travel-assistant-backend\n\nprovider:\n  name: aws\n  runtime: python3.12\n  region: us-east-1\n  environment:\n    JWT_SECRET: ${env:JWT_SECRET}\n    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}\n    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}\n    S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}\n    BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-3-5-sonnet-20241022-v2:0'}\n    LOCATION_MAP_NAME: ${env:LOCATION_MAP_NAME, 'TripMapView'}\n    LOCATION_PLACE_INDEX_NAME: ${env:LOCATION_PLACE_INDEX_NAME, 'TripPlaceIndex'}\n  iam:\n    role:\n      statements:\n        - Effect: Allow\n          Action:\n            - dynamodb:Query\n            - dynamodb:Scan\n            - dynamodb:GetItem\n            - dynamodb:PutItem\n            - dynamodb:UpdateItem\n            - dynamodb:DeleteItem\n          Resource:\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/users\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/trips\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/travel-pois\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/*/index/*\"\n        - Effect: Allow\n          Action:\n            - cognito-idp:SignUp\n            - cognito-idp:InitiateAuth\n            - cognito-idp:ConfirmSignUp\n            - cognito-idp:ResendConfirmationCode\n            - cognito-idp:GetUser\n          Resource:\n            - \"arn:aws:cognito-idp:${self:provider.region}:*:userpool/*\"\n        - Effect: Allow\n          Action:\n            - s3:PutObject\n            - s3:GetObject\n            - s3:DeleteObject\n            - s3:PutObjectAcl\n          Resource:\n            - \"arn:aws:s3:::${env:S3_BUCKET_NAME}/*\"\n        - Effect: Allow\n          Action:\n            - bedrock:InvokeModel\n          Resource: '*'\n        - Effect: Allow\n          Action:\n            - geo:GetMapTile\n            - geo:GetMapStyleDescriptor\n            - geo:GetMapSprites\n            - geo:GetMapGlyphs\n            - geo:SearchPlaceIndexForText\n            - geo:SearchPlaceIndexForPosition\n            - geo:CalculateRoute\n          Resource:\n            - \"arn:aws:geo:${self:provider.region}:*:map/*\"\n            - \"arn:aws:geo:${self:provider.region}:*:place-index/*\"\n            - \"arn:aws:geo:${self:provider.region}:*:route-calculator/*\"\n\nfunctions:\n  signup:\n    handler: handlers/auth.signup\n    events:\n      - http:\n          path: auth/signup\n          method: post\n          cors: true\n\n  login:\n    handler: handlers/auth.login\n    events:\n      - http:\n          path: auth/login\n          method: post\n          cors: true\n\n  confirmSignup:\n    handler: handlers/auth.confirm_signup\n    events:\n      - http:\n          path: auth/confirm\n          method: post\n          cors: true\n\n  resendConfirmation:\n    handler: handlers/auth.resend_confirmation\n    events:\n      - http:\n          path: auth/resend\n          method: post\n          cors: true\n\n  submitQuiz:\n    handler: handlers/quiz.submit_quiz\n    events:\n      - http:\n          path: quiz/submit\n          method: post\n          cors: true\n\n  getQuiz:\n    handler: handlers/quiz.get_quiz\n    events:\n      - http:\n          path: quiz\n          method: get\n          cors: true\n\n  createTrip:\n    handler: handlers/trips.create_trip\n    events:\n      - http:\n          path: trips\n          method: post\n          cors: true\n\n  listTrips:\n    handler: handlers/trips.list_trips\n    events:\n      - http:\n          path: trips\n          method: get\n          cors: true\n\n  getTrip:\n    handler: handlers/trips.get_trip\n    events:\n      - http:\n          path: trips/{trip_id}\n          method: get\n          cors: true\n\n  updateTrip:\n    handler: handlers/trips.update_trip\n    events:\n      - http:\n          path: trips/{trip_id}\n          method: put\n          cors: true\n\n  deleteTrip:\n    handler: handlers/trips.delete_trip\n    events:\n      - http:\n          path: trips/{trip_id}\n          method: delete\n          cors: true\n\n  uploadProfilePhoto:\n    handler: handlers/uploads.upload_profile_photo\n    events:\n      - http:\n          path: uploads/profile-photo\n          method: post\n          cors: true\n\n  uploadTripPhoto:\n    handler: handlers/uploads.upload_trip_photo\n    events:\n      - http:\n          path: uploads/trip-photo\n          method: post\n          cors: true\n\n  uploadPoiImage:\n    handler: handlers/uploads.upload_poi_image\n    events:\n      - http:\n          path: uploads/poi-image\n          method: post\n          cors: true\n\n  uploadItineraryPdf:\n    handler: handlers/uploads.upload_itinerary_pdf\n    events:\n      - http:\n          path: uploads/itinerary-pdf\n          method: post\n          cors: true\n\n  deleteUpload:\n    handler: handlers/uploads.delete_upload\n    events:\n      - http:\n          path: uploads\n          method: delete\n          cors: true\n\n  getProfile:\n    handler: handlers/profile.get_profile\n    events:\n      - http:\n          path: profile\n          method: get\n          cors: true\n\n  updateProfile:\n    handler: handlers/profile.update_profile\n    events:\n      - http:\n          path: profile\n          method: put\n          cors: true\n\n  getSettings:\n    handler: handlers/profile.get_settings\n    events:\n      - http:\n          path: settings\n          method: get\n          cors: true\n\n  updateSettings:\n    handler: handlers/profile.update_settings\n    events:\n      - http:\n          path: settings\n          method: put\n          cors: true\n\n  addPoiToItinerary:\n    handler: handlers/itinerary.add_poi_to_itinerary\n    events:\n      - http:\n          path: trips/{trip_id}/itinerary/pois\n          method: post\n          cors: true\n\n  removePoiFromItinerary:\n    handler: handlers/itinerary.remove_poi_from_itinerary\n    events:\n      - http:\n          path: trips/{trip_id}/itinerary/pois/{poi_id}\n          method: delete\n          cors: true\n\n  updatePoiInItinerary:\n    handler: handlers/itinerary.update_poi_in_itinerary\n    events:\n      - http:\n          path: trips/{trip_id}/itinerary/pois/{poi_id}\n          method: put\n          cors: true\n\n  reorderItinerary:\n    handler: handlers/itinerary.reorder_itinerary\n    events:\n      - http:\n          path: trips/{trip_id}/itinerary/reorder\n          method: post\n          cors: true\n\n  getTripRecommendations:\n    handler: handlers/trip_planning.get_trip_recommendations\n    events:\n      - http:\n          path: trips/{trip_id}/recommendations\n          method: get\n          cors: true\n\n  calculateTripCosts:\n    handler: handlers/trip_planning.calculate_trip_costs\n    events:\n      - http:\n          path: trips/{trip_id}/costs\n          method: get\n          cors: true\n\n  generateAiItinerary:\n    handler: handlers/ai_itinerary.generate\n    timeout: 60\n    events:\n      - http:\n          path: ai/itinerary/generate\n          method: post\n          cors: true\n\n  searchPlaces:\n    handler: handlers/location.search_places\n    events:\n      - http:\n          path: location/search\n          method: get\n          cors: true\n\ncustom:\n  pythonRequirements: {}\n\nresources:\n  Resources:\n    TripMapView:\n      Type: AWS::Location::Map\n      Properties:\n        Configuration:\n          Style: VectorEsriStreets\n        MapName: ${self:provider.environment.LOCATION_MAP_NAME}\n        Description: Map for trip visualization\n        PricingPlan: RequestBasedUsage\n\n    TripPlaceIndex:\n      Type: AWS::Location::PlaceIndex\n      Properties:\n        DataSource: Esri\n        IndexName: ${self:provider.environment.LOCATION_PLACE_INDEX_NAME}\n        Description: Place index for POI search\n        PricingPlan: RequestBasedUsage\n\n    TripRouteCalculator:\n      Type: AWS::Location::RouteCalculator\n      Properties:\n        CalculatorName: TripRouteCalculator\n        DataSource: Esri\n        Description: Route calculator for trip directions\n        PricingPlan: RequestBasedUsage\n",
+    "command": [
+      "deploy",
+      "function"
+    ],
+    "options": {
+      "function": "generateAiItinerary"
+    },
+    "orgId": "763f8ff8-abc0-4960-8d22-b335449fae29",
+    "orgName": "chronicleai",
+    "userId": "wTwLLZcKsKXmF73JGW",
+    "userName": "chronicleai",
+    "serviceProviderAwsAccountId": "675254204118",
+    "serviceProviderAwsCfStackName": "travel-assistant-backend-dev",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:675254204118:stack/travel-assistant-backend-dev/771a3ef0-168b-11f1-81c9-0affea9c1a41",
+    "serviceProviderAwsCfStackCreated": "2026-03-02T22:59:28.117Z",
+    "serviceProviderAwsCfStackUpdated": "2026-03-03T00:23:34.587Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "ResendConfirmationLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-resendConfirmation:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-ResendConfirmationLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdatePoiInItineraryLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-updatePoiInItinerary:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UpdatePoiInItineraryLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ListTripsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-listTrips:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-ListTripsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "SignupLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-signup:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-SignupLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdateTripLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-updateTrip:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UpdateTripLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-e8652d70-03ea",
+        "ExportName": "sls-travel-assistant-backend-dev-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "SubmitQuizLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-submitQuiz:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-SubmitQuizLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetQuizLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-getQuiz:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GetQuizLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetTripRecommendationsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-getTripRecommendations:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GetTripRecommendationsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GenerateAiItineraryLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-generateAiItinerary:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GenerateAiItineraryLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdateProfileLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-updateProfile:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UpdateProfileLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UploadPoiImageLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-uploadPoiImage:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UploadPoiImageLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CalculateTripCostsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-calculateTripCosts:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-CalculateTripCostsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetProfileLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-getProfile:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GetProfileLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UploadProfilePhotoLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-uploadProfilePhoto:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UploadProfilePhotoLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetSettingsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-getSettings:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GetSettingsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "SearchPlacesLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-searchPlaces:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-SearchPlacesLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ConfirmSignupLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-confirmSignup:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-ConfirmSignupLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreateTripLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-createTrip:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-CreateTripLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UploadItineraryPdfLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-uploadItineraryPdf:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UploadItineraryPdfLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "DeleteTripLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-deleteTrip:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-DeleteTripLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ReorderItineraryLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-reorderItinerary:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-ReorderItineraryLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetTripLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-getTrip:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-GetTripLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "DeleteUploadLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-deleteUpload:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-DeleteUploadLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "AddPoiToItineraryLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-addPoiToItinerary:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-AddPoiToItineraryLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "RemovePoiFromItineraryLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-removePoiFromItinerary:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-RemovePoiFromItineraryLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UploadTripPhotoLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-uploadTripPhoto:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UploadTripPhotoLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdateSettingsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-updateSettings:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-UpdateSettingsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "LoginLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:675254204118:function:travel-assistant-backend-dev-login:3",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-travel-assistant-backend-dev-LoginLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServiceEndpoint",
+        "OutputValue": "https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev",
+        "Description": "URL of the service endpoint",
+        "ExportName": "sls-travel-assistant-backend-dev-ServiceEndpoint"
+      }
+    ]
+  }
+}

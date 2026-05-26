@@ -1,0 +1,14 @@
+{
+  "trip_type": "roadtrip",
+  "duration": 3,
+  "start_date": "2026-03-03",
+  "end_date": "2026-03-06",
+  "budget": 500,
+  "intensity": 3,
+  "group_type": "solo",
+  "interests": ["thrifting", "local", "hiking", "camping", "water"],
+  "start_location": "New York City, NY",
+  "end_location": "Tallahassee, FL",
+  "include_gas": false,
+  "scenic_route": true
+}

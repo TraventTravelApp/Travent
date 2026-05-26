@@ -1,0 +1,28 @@
+Create a detailed {duration}-day road trip itinerary from {start_location} to {end_location}.
+
+User Profile:
+- Interests: {interests}
+- Budget: {budget}
+- Day Intensity: {intensity}/10 (1=relaxed, 10=packed schedule)
+- Scenic Route Preference: {scenic_route}
+- Include Gas Estimates: {include_gas}
+
+Requirements:
+1. Plan the route from {start_location} to {end_location}
+2. Include {duration} days of travel with activities
+3. Suggest interesting stops along the route that match user interests
+4. Include activities at the final destination
+5. Provide driving time estimates between major stops
+6. If scenic route is preferred, prioritize beautiful drives over fastest routes
+7. If gas estimates requested, include approximate fuel costs
+8. Stay within a {budget} budget (including gas if requested)
+9. Balance driving time with activity time based on {intensity}/10 intensity
+10. Include overnight stop recommendations with lodging suggestions
+11. Add roadside attractions, photo spots, and local food recommendations
+12. Consider rest stops and meal breaks in the timeline
+
+Return the itinerary in the JSON format specified in your system prompt, with special attention to:
+- Driving segments with distance and time
+- Gas cost estimates (if requested)
+- Overnight stops with lodging price ranges
+- Route highlights and scenic viewpoints
