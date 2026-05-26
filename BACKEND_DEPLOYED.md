@@ -30,7 +30,7 @@
 - Route calculator
 
 ### 2. Backend API Deployed
-✅ **API Gateway URL**: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
+✅ **API Gateway URL**: `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev`
 
 ✅ **All Endpoints Active** (27 endpoints):
 
@@ -80,7 +80,7 @@
 ### 3. Mobile App Connected
 ✅ **API URL Configured**
 - File: `TripApp_AIChallange/mobile/src/services/api.ts`
-- Connected to: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
+- Connected to: `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev`
 - All mock data removed
 - Real backend integration active
 
@@ -127,7 +127,7 @@ serverless logs -f functionName -t
 
 **Test an Endpoint**:
 ```bash
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"TestPass123"}'
 ```
@@ -222,7 +222,7 @@ LOCATION_PLACE_INDEX_NAME=TripPlaceIndex
 ### Mobile App API Configuration
 **File**: `TripApp_AIChallange/mobile/src/services/api.ts`
 ```typescript
-const API_BASE_URL = 'https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = 'https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev';
 ```
 
 ---
@@ -327,7 +327,7 @@ serverless info
 serverless logs -f signup -t
 
 # Test endpoint
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"TestPass123"}'
 

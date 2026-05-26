@@ -14,7 +14,7 @@
 
 ### 2. Backend API Deployed
 - ✅ 27 endpoints live and functional
-- ✅ API URL: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
+- ✅ API URL: `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev`
 - ✅ All Lambda functions deployed
 
 ### 3. Mobile App Fully Connected
@@ -158,7 +158,7 @@ BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-6-20260217-v1:0
 
 ### Mobile App (api.ts)
 ```typescript
-const API_BASE_URL = 'https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = 'https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev';
 ```
 
 ---
@@ -240,7 +240,7 @@ serverless deploy
 
 ### Test Endpoint
 ```bash
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"TestPass123"}'
 ```
@@ -313,5 +313,5 @@ serverless remove
 ---
 
 **Deployment Date**: March 1, 2026  
-**Backend URL**: https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev  
+**Backend URL**: https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev  
 **Status**: ✅ FULLY OPERATIONAL

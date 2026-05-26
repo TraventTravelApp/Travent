@@ -84,9 +84,9 @@ serverless deploy
 ✔ Service deployed to stack travel-assistant-backend-dev (60s)
 
 endpoints:
-  POST - https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login
-  POST - https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup
-  POST - https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/ai/itinerary/generate
+  POST - https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login
+  POST - https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup
+  POST - https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/ai/itinerary/generate
   ...
 
 functions:

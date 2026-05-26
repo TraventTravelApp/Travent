@@ -280,6 +280,6 @@ Example for "Portland, Oregon" 3-day trip:
 ---
 
 **Last Updated**: March 1, 2026  
-**Backend URL**: https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev  
+**Backend URL**: https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev  
 **Model**: Claude 3.5 Sonnet v2  
 **Status**: ⚠️ READY TO DEPLOY (needs AWS credentials)

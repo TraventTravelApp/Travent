@@ -8,7 +8,7 @@
 
 ## Quick Diagnosis
 
-The backend API at `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev` is not responding.
+The backend API at `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev` is not responding.
 
 This happens because:
 1. ✅ AWS temporary session credentials expired (most likely)
@@ -61,8 +61,8 @@ serverless deploy
 ✔ Service deployed to stack travel-assistant-backend-dev (60s)
 
 endpoints:
-  POST - https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login
-  POST - https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup
+  POST - https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login
+  POST - https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup
   ...
 ```
 
@@ -70,7 +70,7 @@ endpoints:
 
 ```bash
 # Test login endpoint
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@chronicle.com","password":"TestPass123"}'
 ```
@@ -107,7 +107,7 @@ const API_BASE_URL = ''; // Empty string = mock mode
 
 // Or add a mock mode flag
 const USE_MOCK_DATA = true;
-const API_BASE_URL = USE_MOCK_DATA ? '' : 'https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = USE_MOCK_DATA ? '' : 'https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev';
 ```
 
 This will make the app work offline with example data.
@@ -159,7 +159,7 @@ npx expo start --clear
 cat src/services/api.ts | grep API_BASE_URL
 
 # 3. Test backend directly
-curl https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login
+curl https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login
 ```
 
 ### "CORS error" in browser
@@ -176,7 +176,7 @@ curl https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login
 
 ```bash
 # Test health
-curl -I https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login
+curl -I https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login
 
 # Should return: HTTP/2 200 or 400 (not 000 or timeout)
 ```
@@ -228,7 +228,7 @@ echo "Testing backend..."
 
 # Test login endpoint
 RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-  https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login)
+  https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login)
 
 if [ "$RESPONSE" = "000" ]; then
   echo "❌ Backend not accessible (connection failed)"
@@ -260,7 +260,7 @@ chmod +x test-backend.sh
 **The Fix:**
 1. Get fresh AWS credentials
 2. Deploy backend: `cd backend && serverless deploy`
-3. Test: `curl https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login`
+3. Test: `curl https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login`
 4. Restart app: `npx expo start --clear`
 
 **Temporary Workaround:**

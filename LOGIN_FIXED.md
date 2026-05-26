@@ -172,7 +172,7 @@ POST /auth/resend
 
 ### Create User
 ```bash
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"newuser@test.com","password":"TestPass123"}'
 ```
@@ -184,7 +184,7 @@ curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/sig
 
 ### Login
 ```bash
-curl -X POST https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev/auth/login \
+curl -X POST https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"newuser@test.com","password":"TestPass123"}'
 ```

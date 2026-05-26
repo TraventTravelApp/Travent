@@ -418,5 +418,5 @@ aws dynamodb scan --table-name trips --limit 5
 ---
 
 **Deployment**: March 1, 2026  
-**Backend URL**: https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev  
+**Backend URL**: https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev  
 **Status**: ✅ PRODUCTION READY

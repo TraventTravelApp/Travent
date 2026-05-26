@@ -33,7 +33,7 @@ I've successfully set up and deployed the complete Chronicle backend infrastruct
 
 ### ✅ Backend API Deployed
 
-**API URL**: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
+**API URL**: `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev`
 
 **27 Endpoints Active**:
 - Authentication (signup, login, confirm, resend)
@@ -143,7 +143,7 @@ BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-6-20260217-v1:0
 
 ### Mobile App API (TripApp_AIChallange/mobile/src/services/api.ts)
 ```typescript
-const API_BASE_URL = 'https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = 'https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev';
 ```
 
 ---
@@ -268,7 +268,7 @@ No more mock data - everything is real and working.
 
 ## Quick Reference
 
-**Backend API**: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
+**Backend API**: `https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev`
 
 **Start Mobile App**:
 ```bash
