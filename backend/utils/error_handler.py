@@ -2,7 +2,11 @@
 import traceback
 from functools import wraps
 from typing import Callable, Dict, Any
+
+import sentry_sdk
+
 from .response import error_response
+from . import sentry_init  # noqa: F401  -- import triggers Sentry init at cold start
 
 
 class AppException(Exception):
@@ -91,7 +95,8 @@ def handle_errors(func: Callable) -> Callable:
             return error_response(400, f"Missing required field: {str(e)}")
 
         except Exception as e:
-            # Unexpected errors - log details but return generic message
+            # Unexpected errors - report to Sentry, log details, return generic message
+            sentry_sdk.capture_exception(e)
             error_type = type(e).__name__
             print(f"Unexpected {error_type} in {func.__name__}: {str(e)}")
             print("Traceback:")

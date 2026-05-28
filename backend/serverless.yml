@@ -17,6 +17,8 @@ provider:
     BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-3-5-sonnet-20241022-v2:0'}
     LOCATION_MAP_NAME: ${env:LOCATION_MAP_NAME, 'TripMapView'}
     LOCATION_PLACE_INDEX_NAME: ${env:LOCATION_PLACE_INDEX_NAME, 'TripPlaceIndex'}
+    SENTRY_DSN: ${env:SENTRY_DSN, ''}
+    STAGE: ${sls:stage}
   iam:
     role:
       statements:
@@ -302,6 +304,14 @@ functions:
           method: get
           cors: true
 
+  debugSentry:
+    handler: handlers/debug.trigger_sentry
+    events:
+      - http:
+          path: debug/sentry
+          method: get
+          cors: true
+
 custom:
   pythonRequirements:
     dockerizePip: false
@@ -310,7 +320,6 @@ custom:
     layer: true
     zip: false
     fileName: requirements.txt
-    pythonBin: "C:\\Users\\Emma Berry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
     pipCmdExtraArgs:
       - "--platform manylinux2014_x86_64"
       - "--only-binary=:all:"
