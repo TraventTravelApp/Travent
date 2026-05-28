@@ -8,6 +8,7 @@ provider:
   name: aws
   runtime: python3.12
   region: us-east-1
+  versionFunctions: false
   layers:
     - Ref: PythonRequirementsLambdaLayer
   environment:
