@@ -34,3 +34,7 @@ This folder is the operating system for how Emma, Nikki, and Jaliah ship Chronic
 | Today's date | Current sprint | Current increment | Target launch |
 |---|---|---|---|
 | 2026-05-25 | Sprint 1 (W1) | Inc 1 — Foundations | end of W16 (~2026-09-14) |
+
+## Deploy reference
+
+- **[infrastructure/DEPLOY.md](../infrastructure/DEPLOY.md)** — how to deploy `dev` and `staging`, env vars, rollback, and common errors.
