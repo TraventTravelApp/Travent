@@ -1,0 +1,428 @@
+openapi: 3.1.0
+info:
+  title: Trip App API
+  description: |
+    API contract for the travel assistant backend.
+    Auth endpoints match `backend/handlers/auth.py`.
+  version: 0.1.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+  contact:
+    name: Trip App Backend Team
+
+servers:
+  - url: https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev
+    description: Development (API Gateway)
+
+# Default for protected routes; each public auth path sets security: []
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/signup:
+    post:
+      operationId: authSignup
+      summary: Register a new user
+      description: |
+        Creates a Cognito user and a DynamoDB profile record.
+        The user must verify email via `/auth/confirm` before logging in.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/SignupRequestExample'
+      responses:
+        '200':
+          description: User created; verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/SignupResponseExample'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFields:
+                  value:
+                    error: Email and password required
+                userExists:
+                  value:
+                    error: User already exists
+                invalidPassword:
+                  value:
+                    error: Invalid password
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      operationId: authLogin
+      summary: Log in with email and password
+      description: |
+        Authenticates via Cognito `USER_PASSWORD_AUTH` and returns JWT tokens.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/LoginRequestExample'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/LoginResponseExample'
+        '400':
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFields:
+                  value:
+                    error: Email and password required
+        '401':
+          description: Invalid credentials or unverified email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    error: Invalid credentials
+                notConfirmed:
+                  value:
+                    error: User email not verified. Please check your email.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/confirm:
+    post:
+      operationId: authConfirmSignup
+      summary: Confirm email with verification code
+      description: Confirms Cognito signup using the code sent to the user's email.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmSignupRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/ConfirmSignupRequestExample'
+      responses:
+        '200':
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/ConfirmSignupResponseExample'
+        '400':
+          description: Missing fields, invalid code, or expired code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFields:
+                  value:
+                    error: Email and verification code required
+                invalidCode:
+                  value:
+                    error: Invalid verification code
+                expiredCode:
+                  value:
+                    error: Verification code expired
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/resend:
+    post:
+      operationId: authResendConfirmation
+      summary: Resend email verification code
+      description: Triggers Cognito to resend the signup confirmation code.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendConfirmationRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/ResendConfirmationRequestExample'
+      responses:
+        '200':
+          description: Verification code sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/ResendConfirmationResponseExample'
+        '400':
+          description: Missing email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEmail:
+                  value:
+                    error: Email required
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Cognito `id_token` or `access_token` from `/auth/login`.
+        Used by protected endpoints (not required for auth routes in this spec).
+
+  responses:
+    InternalServerError:
+      description: Unexpected server or Cognito error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            default:
+              value:
+                error: Authentication service error
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+      example:
+        error: Email and password required
+
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email (Cognito username)
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Password meeting Cognito pool policy
+      example:
+        email: traveler@example.com
+        password: SecurePass123!
+
+    SignupResponse:
+      type: object
+      required:
+        - user_id
+        - email
+        - message
+      properties:
+        user_id:
+          type: string
+          description: Cognito user sub (UUID)
+        email:
+          type: string
+          format: email
+        message:
+          type: string
+      example:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        email: traveler@example.com
+        message: User created successfully. Please check your email to verify your account.
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      example:
+        email: traveler@example.com
+        password: SecurePass123!
+
+    AuthTokens:
+      type: object
+      required:
+        - id_token
+        - access_token
+        - refresh_token
+      properties:
+        id_token:
+          type: string
+          description: Cognito ID token (JWT)
+        access_token:
+          type: string
+          description: Cognito access token (JWT)
+        refresh_token:
+          type: string
+          description: Cognito refresh token
+      example:
+        id_token: eyJraWQiOiJleGFtcGxl...
+        access_token: eyJraWQiOiJleGFtcGxl...
+        refresh_token: eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIi...
+
+    LoginResponse:
+      allOf:
+        - type: object
+          required:
+            - user_id
+            - email
+          properties:
+            user_id:
+              type: string
+              description: Cognito user sub
+            email:
+              type: string
+              format: email
+        - $ref: '#/components/schemas/AuthTokens'
+      example:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        email: traveler@example.com
+        id_token: eyJraWQiOiJleGFtcGxl...
+        access_token: eyJraWQiOiJleGFtcGxl...
+        refresh_token: eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIi...
+
+    ConfirmSignupRequest:
+      type: object
+      required:
+        - email
+        - code
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          description: Six-digit verification code from email
+          pattern: '^[0-9]{6}$'
+      example:
+        email: traveler@example.com
+        code: '123456'
+
+    ResendConfirmationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+      example:
+        email: traveler@example.com
+
+    MessageResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+      example:
+        message: Email verified successfully. You can now log in.
+
+  examples:
+    SignupRequestExample:
+      summary: New user signup
+      value:
+        email: traveler@example.com
+        password: SecurePass123!
+
+    SignupResponseExample:
+      summary: Successful signup
+      value:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        email: traveler@example.com
+        message: User created successfully. Please check your email to verify your account.
+
+    LoginRequestExample:
+      summary: Login credentials
+      value:
+        email: traveler@example.com
+        password: SecurePass123!
+
+    LoginResponseExample:
+      summary: Successful login with tokens
+      value:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        email: traveler@example.com
+        id_token: eyJraWQiOiJleGFtcGxl...
+        access_token: eyJraWQiOiJleGFtcGxl...
+        refresh_token: eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIi...
+
+    ConfirmSignupRequestExample:
+      summary: Email verification
+      value:
+        email: traveler@example.com
+        code: '123456'
+
+    ConfirmSignupResponseExample:
+      summary: Email confirmed
+      value:
+        message: Email verified successfully. You can now log in.
+
+    ResendConfirmationRequestExample:
+      summary: Resend code request
+      value:
+        email: traveler@example.com
+
+    ResendConfirmationResponseExample:
+      summary: Code resent
+      value:
+        message: Verification code sent to your email.
