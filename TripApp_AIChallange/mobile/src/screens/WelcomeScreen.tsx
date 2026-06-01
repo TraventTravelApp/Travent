@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as Sentry from '@sentry/react-native';
 import { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
@@ -48,6 +49,17 @@ export default function WelcomeScreen({ navigation }: Props) {
               Already have an account? <Text style={styles.loginLink}>Log in</Text>
             </Text>
           </TouchableOpacity>
+
+          {__DEV__ && (
+            <TouchableOpacity
+              onPress={() => {
+                throw new Error('Chronicle mobile Sentry verification — this error is expected.');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.debugText}>DEBUG: Trigger Sentry test error</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </ImageBackground>
@@ -122,5 +134,14 @@ const styles = StyleSheet.create({
   loginLink: {
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  debugText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    opacity: 0.5,
+    marginTop: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
