@@ -66,20 +66,17 @@ python3.11 --version
 
 Both must be on your `PATH`. On macOS, install via `pyenv` or `brew install python@3.12 python@3.11`.
 
-### ⚠️ Known issue — hardcoded `pythonBin` in `backend/serverless.yml`
+### `pythonBin` in `backend/serverless.yml` (resolved 2026-05-31, A2)
 
-`backend/serverless.yml` has this line under `custom.pythonRequirements`:
+`backend/serverless.yml` under `custom.pythonRequirements` is now:
 
 ```yaml
-pythonBin: "C:\\Users\\Emma Berry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+pythonBin: python3
 ```
 
-This is Emma's Windows path and **will break on any other machine**. Before deploying, either:
+This relies on `python3` being on your `PATH`, which works on Mac, Linux, and AWS CloudShell. The `pipCmdExtraArgs` flags (`--platform manylinux2014_x86_64`, `--python-version 312`) force pip to download Python 3.12 manylinux wheels regardless of the local interpreter version, so the Lambda layer ends up correct even if your local `python3` is 3.9 or 3.11.
 
-- Remove the `pythonBin` line entirely (Serverless will find `python3` on your PATH), or
-- Override it locally with your own path
-
-Do not commit your local override. A fix to use `python3` by default is tracked in the backlog.
+**⚠️ Do NOT re-add a hardcoded path here.** A prior version of this file had `pythonBin: "C:\\Users\\Emma Berry\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"` which broke every non-Windows deploy. If you need a different interpreter locally, set the `pythonBin` line as a **local-only override** and don't commit it.
 
 ---
 
