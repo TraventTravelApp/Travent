@@ -4,6 +4,7 @@ info:
   description: |
     API contract for the travel assistant backend.
     Auth endpoints match `backend/handlers/auth.py`.
+    Trips and AI endpoints match `backend/handlers/trips.py` and `ai-layer/handlers/itinerary.py`.
   version: 0.1.0
   license:
     name: Proprietary
@@ -208,7 +209,384 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-components:
+  /trips:
+    post:
+      operationId: createTrip
+      summary: Create a new trip
+      description: |
+        Creates a trip record in DynamoDB with questionnaire data.
+        For `location` trips, `destination` is required.
+        For `roadtrip` trips, `questionnaire.starting_point` and `questionnaire.ending_point` are required.
+        The trip is created with `status: pending` and an empty `itinerary`.
+        Call `POST /ai/itinerary/generate` separately to populate the itinerary.
+      tags:
+        - Trips
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+            examples:
+              locationTrip:
+                $ref: '#/components/examples/CreateLocationTripExample'
+              roadTrip:
+                $ref: '#/components/examples/CreateRoadTripExample'
+      responses:
+        '200':
+          description: Trip created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/TripResponseExample'
+        '400':
+          description: Validation error — missing required fields or invalid values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingDestination:
+                  value:
+                    error: "Validation error: destination is required for location trips"
+                negativeBudget:
+                  value:
+                    error: "Validation error: questionnaire -> budget: Input should be greater than or equal to 0"
+                zeroDays:
+                  value:
+                    error: "Validation error: questionnaire -> duration_days: Input should be greater than or equal to 1"
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      operationId: listTrips
+      summary: List all trips for the authenticated user
+      description: |
+        Returns all trips owned by the authenticated user, queried via the
+        DynamoDB `user-index` GSI. Returns an empty array if the user has no trips.
+      tags:
+        - Trips
+      responses:
+        '200':
+          description: Array of trips (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/TripListExample'
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /trips/{trip_id}:
+    parameters:
+      - name: trip_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the trip
+        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+
+    get:
+      operationId: getTrip
+      summary: Get a single trip by ID
+      description: |
+        Returns the full trip record including itinerary.
+        Returns 403 if the trip exists but belongs to a different user.
+      tags:
+        - Trips
+      responses:
+        '200':
+          description: Trip found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+              examples:
+                default:
+                  $ref: '#/components/examples/TripResponseExample'
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '403':
+          description: Trip belongs to a different user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    error: Access denied
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: Trip not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      operationId: updateTrip
+      summary: Update a trip
+      description: |
+        Updates one or more of `preferences`, `status`, or `itinerary`.
+        At least one field must be provided. All fields are optional but the
+        request body must not be empty.
+        Valid `status` values: `pending`, `active`, `completed`, `cancelled`.
+      tags:
+        - Trips
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTripRequest'
+            examples:
+              updateStatus:
+                $ref: '#/components/examples/UpdateTripStatusExample'
+              updatePreferences:
+                $ref: '#/components/examples/UpdateTripPreferencesExample'
+      responses:
+        '200':
+          description: Trip updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                default:
+                  value:
+                    message: Trip updated
+        '400':
+          description: Validation error — invalid status value or no fields provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidStatus:
+                  value:
+                    error: "Validation error: status: Input should be 'pending', 'active', 'completed' or 'cancelled'"
+                noFields:
+                  value:
+                    error: "Validation error: At least one field must be provided for update"
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '403':
+          description: Trip belongs to a different user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    error: Access denied
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: Trip not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      operationId: deleteTrip
+      summary: Delete a trip
+      description: |
+        Permanently deletes the trip record from DynamoDB.
+        Returns 403 if the trip exists but belongs to a different user.
+      tags:
+        - Trips
+      responses:
+        '200':
+          description: Trip deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                default:
+                  value:
+                    message: Trip deleted
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '403':
+          description: Trip belongs to a different user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    error: Access denied
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: Trip not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /ai/itinerary/generate:
+    post:
+      operationId: generateAiItinerary
+      summary: Generate an AI itinerary via Bedrock
+      description: |
+        Calls AWS Bedrock (Claude Sonnet) to generate a day-by-day itinerary.
+        This is a long-running operation — the Lambda timeout is **25 seconds**.
+        If Bedrock takes longer than 25 seconds, API Gateway returns a **504**.
+        The mobile client should set a request timeout of at least 30 seconds and
+        handle 504 with a user-facing retry prompt.
+
+        The handler retries internally up to 2 times if itinerary validation fails.
+        On max retries, it returns the best result with `validation_passed: false`
+        and a `validation_warnings` array rather than erroring.
+
+        For `location` trips, `destination` is required.
+        For `roadtrip` trips, `start_location` and `end_location` are required.
+      tags:
+        - AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIItineraryRequest'
+            examples:
+              locationTrip:
+                $ref: '#/components/examples/AILocationTripExample'
+              roadTrip:
+                $ref: '#/components/examples/AIRoadTripExample'
+      responses:
+        '200':
+          description: Itinerary generated (check `validation_passed` for quality warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIItineraryResponse'
+              examples:
+                success:
+                  $ref: '#/components/examples/AIItineraryResponseExample'
+        '400':
+          description: Validation error — invalid trip_type or missing required location fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidTripType:
+                  value:
+                    error: 'Invalid trip_type. Must be "location" or "roadtrip"'
+                missingDestination:
+                  value:
+                    error: destination is required for location trips
+                missingRoadtripPoints:
+                  value:
+                    error: start_location and end_location are required for roadtrips
+        '401':
+          description: Missing or invalid Authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized - valid authentication token required
+        '500':
+          description: Bedrock or internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bedrockError:
+                  value:
+                    error: Failed to generate itinerary: Bedrock service error
+        '504':
+          description: |
+            Gateway timeout — Bedrock call exceeded the 25-second Lambda timeout.
+            Retry the request. If timeouts persist, check AWS Bedrock service health.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                timeout:
+                  value:
+                    message: Endpoint request timed out
   securitySchemes:
     BearerAuth:
       type: http
@@ -377,6 +755,305 @@ components:
       example:
         message: Email verified successfully. You can now log in.
 
+    RoadTripPreferences:
+      type: object
+      properties:
+        include_gas_costs:
+          type: boolean
+          default: false
+          description: Whether to include gas cost estimates in the itinerary
+        scenic_route:
+          type: boolean
+          default: true
+          description: Prefer scenic routes over fastest routes
+      example:
+        include_gas_costs: true
+        scenic_route: true
+
+    TripQuestionnaire:
+      type: object
+      required:
+        - duration_days
+        - budget
+        - how_busy
+        - traveling_with
+      properties:
+        starting_point:
+          type: string
+          maxLength: 200
+          description: Required for roadtrip trips
+          example: Austin, TX
+        ending_point:
+          type: string
+          maxLength: 200
+          description: Required for roadtrip trips
+          example: Nashville, TN
+        duration_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Trip duration in days
+          example: 5
+        budget:
+          type: number
+          minimum: 0
+          maximum: 100000
+          description: Total trip budget in USD
+          example: 1500
+        how_busy:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Activity intensity level — 1 (relaxed) to 5 (packed)
+          example: 3
+        traveling_with:
+          type: string
+          enum: [solo, group]
+          example: solo
+        road_trip_preferences:
+          $ref: '#/components/schemas/RoadTripPreferences'
+        activity_categories:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            maxLength: 50
+          description: Preferred activity types (e.g. museums, food, hiking)
+          example: [museums, food, outdoor]
+      example:
+        duration_days: 5
+        budget: 1500
+        how_busy: 3
+        traveling_with: solo
+        activity_categories: [museums, food]
+
+    CreateTripRequest:
+      type: object
+      required:
+        - type
+        - questionnaire
+      properties:
+        type:
+          type: string
+          enum: [location, roadtrip]
+          description: Trip type — determines which fields are required
+        destination:
+          type: string
+          maxLength: 200
+          description: Required when type is `location`
+          example: New York, NY
+        questionnaire:
+          $ref: '#/components/schemas/TripQuestionnaire'
+        preferences:
+          type: object
+          additionalProperties: true
+          description: Freeform preferences map (optional)
+          example: {}
+      example:
+        type: location
+        destination: New York, NY
+        questionnaire:
+          duration_days: 5
+          budget: 1500
+          how_busy: 3
+          traveling_with: solo
+          activity_categories: [museums, food]
+        preferences: {}
+
+    TripResponse:
+      type: object
+      required:
+        - trip_id
+        - user_id
+        - type
+        - status
+        - created_at
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+          description: Unique trip identifier
+        user_id:
+          type: string
+          description: Cognito user sub of the owner
+        type:
+          type: string
+          enum: [location, roadtrip]
+        destination:
+          type: string
+          nullable: true
+        questionnaire:
+          $ref: '#/components/schemas/TripQuestionnaire'
+        preferences:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+        itinerary:
+          type: object
+          additionalProperties: true
+          description: Populated after calling `POST /ai/itinerary/generate`
+        created_at:
+          type: string
+          format: date-time
+      example:
+        trip_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        type: location
+        destination: New York, NY
+        questionnaire:
+          duration_days: 5
+          budget: 1500
+          how_busy: 3
+          traveling_with: solo
+          activity_categories: [museums, food]
+        preferences: {}
+        status: pending
+        itinerary: {}
+        created_at: '2026-05-25T14:30:00+00:00'
+
+    UpdateTripRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        preferences:
+          type: object
+          additionalProperties: true
+          nullable: true
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+          nullable: true
+        itinerary:
+          type: object
+          additionalProperties: true
+          nullable: true
+      example:
+        status: active
+
+    AIItineraryRequest:
+      type: object
+      required:
+        - trip_type
+      properties:
+        trip_type:
+          type: string
+          enum: [location, roadtrip]
+        destination:
+          type: string
+          maxLength: 200
+          description: Required when trip_type is `location`
+          example: Boston, MA
+        start_location:
+          type: string
+          maxLength: 200
+          description: Required when trip_type is `roadtrip`
+          example: Austin, TX
+        end_location:
+          type: string
+          maxLength: 200
+          description: Required when trip_type is `roadtrip`
+          example: Nashville, TN
+        duration:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 3
+          description: Trip duration in days
+        budget:
+          type: number
+          minimum: 0
+          maximum: 100000
+          default: 500
+          description: Total budget in USD
+        intensity:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 3
+          description: Activity intensity — 1 (relaxed) to 5 (packed)
+        group_type:
+          type: string
+          enum: [solo, group]
+          default: solo
+        interests:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 100
+          example: [history, food, art]
+        start_date:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Optional start date in YYYY-MM-DD format
+          example: '2026-07-04'
+        end_date:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Optional end date in YYYY-MM-DD format
+          example: '2026-07-07'
+        include_gas:
+          type: boolean
+          default: false
+          description: Include gas cost estimates (roadtrip only)
+        scenic_route:
+          type: boolean
+          default: true
+          description: Prefer scenic routes (roadtrip only)
+      example:
+        trip_type: location
+        destination: Boston, MA
+        duration: 3
+        budget: 800
+        intensity: 3
+        group_type: solo
+        interests: [history, food]
+
+    AIItineraryResponse:
+      type: object
+      required:
+        - user_id
+        - trip_type
+        - itinerary
+        - validation_passed
+      properties:
+        user_id:
+          type: string
+          description: Cognito user sub from the JWT
+        trip_type:
+          type: string
+          enum: [location, roadtrip]
+        itinerary:
+          type: object
+          additionalProperties: true
+          description: Generated day-by-day itinerary from Claude
+        validation_passed:
+          type: boolean
+          description: |
+            `true` if the itinerary passed all internal validation checks.
+            `false` if max retries were reached — itinerary is still returned
+            but may have minor issues listed in `validation_warnings`.
+        validation_warnings:
+          type: array
+          items:
+            type: string
+          description: Present only when `validation_passed` is false
+      example:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        trip_type: location
+        itinerary:
+          days:
+            - day: 1
+              activities:
+                - name: Freedom Trail Walking Tour
+                  time: '09:00'
+                  duration_hours: 2
+                  category: history
+                  cost_usd: 0
+        validation_passed: true
+
   examples:
     SignupRequestExample:
       summary: New user signup
@@ -426,3 +1103,126 @@ components:
       summary: Code resent
       value:
         message: Verification code sent to your email.
+
+    CreateLocationTripExample:
+      summary: Create a location-based trip
+      value:
+        type: location
+        destination: New York, NY
+        questionnaire:
+          duration_days: 5
+          budget: 1500
+          how_busy: 3
+          traveling_with: solo
+          activity_categories: [museums, food]
+        preferences: {}
+
+    CreateRoadTripExample:
+      summary: Create a road trip
+      value:
+        type: roadtrip
+        questionnaire:
+          starting_point: Austin, TX
+          ending_point: Nashville, TN
+          duration_days: 7
+          budget: 2000
+          how_busy: 3
+          traveling_with: group
+          road_trip_preferences:
+            include_gas_costs: true
+            scenic_route: true
+          activity_categories: [music, food, outdoor]
+        preferences: {}
+
+    TripResponseExample:
+      summary: Created trip
+      value:
+        trip_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        type: location
+        destination: New York, NY
+        questionnaire:
+          duration_days: 5
+          budget: 1500
+          how_busy: 3
+          traveling_with: solo
+          activity_categories: [museums, food]
+        preferences: {}
+        status: pending
+        itinerary: {}
+        created_at: '2026-05-25T14:30:00+00:00'
+
+    TripListExample:
+      summary: List of user trips
+      value:
+        - trip_id: d290f1ee-6c54-4b01-90e6-d701748f0851
+          user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+          type: location
+          destination: New York, NY
+          status: active
+          created_at: '2026-05-25T14:30:00+00:00'
+        - trip_id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+          user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+          type: roadtrip
+          destination: null
+          status: pending
+          created_at: '2026-05-20T09:00:00+00:00'
+
+    UpdateTripStatusExample:
+      summary: Update trip status
+      value:
+        status: active
+
+    UpdateTripPreferencesExample:
+      summary: Update trip preferences
+      value:
+        preferences:
+          accommodation_type: hotel
+          dietary_restrictions: vegetarian
+
+    AILocationTripExample:
+      summary: Generate itinerary for a location trip
+      value:
+        trip_type: location
+        destination: Boston, MA
+        duration: 3
+        budget: 800
+        intensity: 3
+        group_type: solo
+        interests: [history, food]
+        start_date: '2026-07-04'
+
+    AIRoadTripExample:
+      summary: Generate itinerary for a road trip
+      value:
+        trip_type: roadtrip
+        start_location: Austin, TX
+        end_location: Nashville, TN
+        duration: 7
+        budget: 2000
+        intensity: 3
+        group_type: group
+        interests: [music, food, outdoor]
+        include_gas: true
+        scenic_route: true
+
+    AIItineraryResponseExample:
+      summary: Successfully generated itinerary
+      value:
+        user_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        trip_type: location
+        itinerary:
+          days:
+            - day: 1
+              activities:
+                - name: Freedom Trail Walking Tour
+                  time: '09:00'
+                  duration_hours: 2
+                  category: history
+                  cost_usd: 0
+                - name: Quincy Market lunch
+                  time: '12:00'
+                  duration_hours: 1
+                  category: food
+                  cost_usd: 20
+        validation_passed: true
