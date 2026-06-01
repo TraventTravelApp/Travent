@@ -4,7 +4,10 @@
   "description": "Official Chronicle repo",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs:preview": "bash ./scripts/deploy-swagger-ui.sh preview",
+    "docs:deploy": "bash ./scripts/deploy-swagger-ui.sh apply",
+    "docs:sync": "bash ./scripts/deploy-swagger-ui.sh sync"
   },
   "repository": {
     "type": "git",

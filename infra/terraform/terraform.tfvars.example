@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars and fill in values before running deploy-swagger-ui.sh apply
+
+project_name  = "c-o1"
+environment   = "internal"
+aws_region    = "us-east-1"
+
+basic_auth_username = "docs-reader"
+basic_auth_password = "change-me-before-deploy"
+
+# Optional: restrict direct S3 access to corporate/VPN IP ranges.
+# CloudFront access still requires basic auth. Confirm with Emma before enabling.
+# allowed_ip_cidrs = ["203.0.113.0/24"]
