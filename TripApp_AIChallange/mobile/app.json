@@ -44,12 +44,7 @@
           "locationAlwaysAndWhenInUsePermission": "Allow LocalSide to use your location to show you nearby hidden gems and plan your route."
         }
       ],
-      [
-        "react-native-maps",
-        {
-          "useGoogleMaps": false
-        }
-      ]
+      "@sentry/react-native/expo"
     ]
   }
 }
