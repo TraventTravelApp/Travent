@@ -13,7 +13,7 @@ info:
     name: Trip App Backend Team
 
 servers:
-  - url: https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev
+  - url: https://02qxzqxjjd.execute-api.us-east-1.amazonaws.com/dev
     description: Development (API Gateway)
 
 # Default for protected routes; each public auth path sets security: []

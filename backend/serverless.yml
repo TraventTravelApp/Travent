@@ -1,9 +1,7 @@
 service: travel-assistant-backend
 
 plugins:
-  - serverless-python-requirements
   - serverless-offline
-
 provider:
   name: aws
   runtime: python3.12
@@ -36,6 +34,10 @@ provider:
             - "arn:aws:dynamodb:${self:provider.region}:*:table/trips"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/travel-pois"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/trip-photos"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/friendships"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/friendships/index/*"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/trip_shares"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/trip_shares/index/*"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/*/index/*"
         - Effect: Allow
           Action:
@@ -158,6 +160,62 @@ functions:
       - http:
           path: trips/{trip_id}
           method: delete
+          cors: true
+
+  getFriends:
+    handler: handlers/friends.get_friends
+    events:
+      - http:
+          path: friends
+          method: get
+          cors: true
+
+  sendFriendRequest:
+    handler: handlers/friends.send_friend_request
+    events:
+      - http:
+          path: friends/request
+          method: post
+          cors: true
+
+  respondToFriendRequest:
+    handler: handlers/friends.respond_to_request
+    events:
+      - http:
+          path: friends/request/{request_id}
+          method: put
+          cors: true
+
+  getPendingRequests:
+    handler: handlers/friends.get_pending_requests
+    events:
+      - http:
+          path: friends/requests/pending
+          method: get
+          cors: true
+
+  removeFriend:
+    handler: handlers/friends.remove_friend
+    events:
+      - http:
+          path: friends/{friend_id}
+          method: delete
+          cors: true
+
+  shareTrip:
+    handler: handlers/friends.share_trip
+    events:
+      - http:
+          path: trips/{trip_id}/share
+          method: post
+          cors: true
+
+  getSharedTrips:
+    handler: handlers/friends.get_shared_trips
+    events:
+      - http:
+          path: friends/{friend_id}/trips
+          method: get
           cors: true
 
   uploadProfilePhoto:
@@ -321,7 +379,8 @@ custom:
     layer: true
     zip: false
     fileName: requirements.txt
-    pythonBin: python3
+    useStaticCache: false
+    useDownloadCache: false
     pipCmdExtraArgs:
       - "--platform manylinux2014_x86_64"
       - "--only-binary=:all:"

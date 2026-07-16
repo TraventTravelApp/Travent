@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,78 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../types';
+import { api } from '../services/api';
+import { authService } from '../services/auth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
 export default function ProfileScreen({ navigation }: Props) {
-  const [name, setName] = useState('Explorer');
-  const [email, setEmail] = useState('explorer@hiddengemtrips.com');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
   const [budget, setBudget] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      // Pre-fill from local storage immediately
+      const storedEmail = await AsyncStorage.getItem('email');
+      if (storedEmail) setEmail(storedEmail);
+
+      // Fetch full profile from backend
+      const response = await api.get<{ name?: string; email?: string; bio?: string }>('/profile');
+      if (response.success && response.data) {
+        setName(response.data.name || '');
+        setEmail(response.data.email || storedEmail || '');
+        setBio(response.data.bio || '');
+      }
+    } catch (err) {
+      // Non-fatal — user still sees whatever was pre-filled
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const response = await api.put('/profile', { name, bio });
+      if (response.success) {
+        Alert.alert('Success', 'Profile updated successfully');
+      } else {
+        Alert.alert('Error', response.error || 'Failed to save changes');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await authService.logout();
+    navigation.navigate('Welcome');
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#1F3D2B" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -57,9 +119,9 @@ export default function ProfileScreen({ navigation }: Props) {
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.inputDisabled]}
               value={email}
-              onChangeText={setEmail}
+              editable={false}
               placeholder="Enter your email"
               placeholderTextColor="#999"
               keyboardType="email-address"
@@ -67,8 +129,30 @@ export default function ProfileScreen({ navigation }: Props) {
             />
           </View>
 
-          <TouchableOpacity style={styles.saveButton} activeOpacity={0.8}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Bio</Text>
+            <TextInput
+              style={[styles.input, styles.inputMultiline]}
+              value={bio}
+              onChangeText={setBio}
+              placeholder="Tell us a bit about yourself"
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            activeOpacity={0.8}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -162,7 +246,7 @@ export default function ProfileScreen({ navigation }: Props) {
         {/* Sign Out Button */}
         <TouchableOpacity
           style={styles.signOutButton}
-          onPress={() => navigation.navigate('Welcome')}
+          onPress={handleSignOut}
           activeOpacity={0.8}
         >
           <Text style={styles.signOutText}>Sign Out</Text>
@@ -178,6 +262,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4EBDC',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     backgroundColor: '#F4EBDC',
@@ -248,12 +336,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5E5',
   },
+  inputDisabled: {
+    color: '#888',
+  },
+  inputMultiline: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
   saveButton: {
     backgroundColor: '#1F3D2B',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
     color: '#FFFFFF',

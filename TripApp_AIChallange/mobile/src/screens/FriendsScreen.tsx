@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,48 +6,51 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import { api } from '../services/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Friends'>;
 
 interface Friend {
-  id: string;
+  friend_id: string;
+  friendship_id: string;
   name: string;
-  initials: string;
-  sharedTrips: number;
-  email?: string;
+  email: string;
 }
 
-// Mock friends data
-const mockFriends: Friend[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    initials: 'SC',
-    sharedTrips: 2,
-    email: 'sarah@example.com',
-  },
-  {
-    id: '2',
-    name: 'Mike Torres',
-    initials: 'MT',
-    sharedTrips: 2,
-    email: 'mike@example.com',
-  },
-  {
-    id: '3',
-    name: 'Emma Rodriguez',
-    initials: 'ER',
-    sharedTrips: 2,
-    email: 'emma@example.com',
-  },
-];
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
-export default function FriendsScreen({ navigation, route }: Props) {
-  const [friends, setFriends] = useState<Friend[]>(mockFriends);
+export default function FriendsScreen({ navigation }: Props) {
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFriends();
+  }, []);
+
+  const loadFriends = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get<Friend[]>('/friends');
+      if (response.success && response.data) {
+        setFriends(response.data);
+      }
+    } catch (err) {
+      // Friends list stays empty on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleClose = () => {
     navigation.goBack();
@@ -59,50 +62,59 @@ export default function FriendsScreen({ navigation, route }: Props) {
 
   const handleShareTrip = (friend: Friend) => {
     navigation.navigate('ShareTrip', {
-      friendId: friend.id,
+      friendId: friend.friend_id,
       friendName: friend.name,
     });
   };
 
   return (
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose} style={styles.backButton}>
-            <Text style={styles.backIcon}>←</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleClose} style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Friends</Text>
+        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+          <Text style={styles.closeIcon}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Add Friend Button */}
+          <TouchableOpacity
+            style={styles.addFriendButton}
+            onPress={handleAddFriend}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.addFriendIcon}>+</Text>
+            <Text style={styles.addFriendText}>Add Friend</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Friends</Text>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Text style={styles.closeIcon}>✕</Text>
-          </TouchableOpacity>
-        </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <View style={styles.content}>
-            {/* Add Friend Button */}
-            <TouchableOpacity
-              style={styles.addFriendButton}
-              onPress={handleAddFriend}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.addFriendIcon}>+</Text>
-              <Text style={styles.addFriendText}>Add Friend</Text>
-            </TouchableOpacity>
+          {/* My Friends Section */}
+          <Text style={styles.sectionTitle}>My Friends ({friends.length})</Text>
 
-            {/* My Friends Section */}
-            <Text style={styles.sectionTitle}>My Friends ({friends.length})</Text>
-
-            {/* Friends List */}
+          {/* Loading / Empty / List */}
+          {loading ? (
+            <View style={styles.centeredState}>
+              <ActivityIndicator size="large" color="#1F3D2B" />
+            </View>
+          ) : friends.length === 0 ? (
+            <View style={styles.centeredState}>
+              <Text style={styles.emptyText}>No friends yet. Add a friend to get started!</Text>
+            </View>
+          ) : (
             <View style={styles.friendsList}>
               {friends.map((friend) => (
-                <View key={friend.id} style={styles.friendCard}>
+                <View key={friend.friend_id} style={styles.friendCard}>
                   <View style={styles.friendLeft}>
                     <View style={styles.avatarCircle}>
-                      <Text style={styles.avatarText}>{friend.initials}</Text>
+                      <Text style={styles.avatarText}>{getInitials(friend.name)}</Text>
                     </View>
                     <View style={styles.friendInfo}>
                       <Text style={styles.friendName}>{friend.name}</Text>
-                      <Text style={styles.sharedTrips}>{friend.sharedTrips} shared trips</Text>
+                      <Text style={styles.sharedTrips}>{friend.email}</Text>
                     </View>
                   </View>
                   <TouchableOpacity
@@ -115,24 +127,25 @@ export default function FriendsScreen({ navigation, route }: Props) {
                 </View>
               ))}
             </View>
+          )}
 
-            {/* Collaborate Info Box */}
-            <View style={styles.infoBox}>
-              <View style={styles.infoHeader}>
-                <Image
-                  source={require('../../assets/images/group-icon-new.png')}
-                  style={styles.infoIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.infoTitle}>Collaborate on Trips</Text>
-              </View>
-              <Text style={styles.infoDescription}>
-                Share trips with friends to plan together! They can add activities, vote on favorites, and share memories.
-              </Text>
+          {/* Collaborate Info Box */}
+          <View style={styles.infoBox}>
+            <View style={styles.infoHeader}>
+              <Image
+                source={require('../../assets/images/group-icon-new.png')}
+                style={styles.infoIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.infoTitle}>Collaborate on Trips</Text>
             </View>
+            <Text style={styles.infoDescription}>
+              Share trips with friends to plan together! They can add activities, vote on favorites, and share memories.
+            </Text>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -205,6 +218,16 @@ const styles = StyleSheet.create({
     color: '#1F3D2B',
     marginBottom: 16,
   },
+  centeredState: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
   friendsList: {
     gap: 12,
     marginBottom: 24,
@@ -271,6 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5D4C1',
     borderRadius: 16,
     padding: 20,
+    marginTop: 8,
   },
   infoHeader: {
     flexDirection: 'row',

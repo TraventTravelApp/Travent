@@ -23,7 +23,8 @@ export const encrypt = (data: string | object): string => {
  * @param encryptedData - Encrypted string to decrypt
  * @returns Decrypted string or parsed object
  */
-export const decrypt = <T>(encryptedData: string): T | string => {
+export const decrypt = <T>(encryptedData: string | null): T | string | null => {
+  if (!encryptedData) return null;
   try {
     // Simple Base64 decoding for demonstration
     // In production, replace with proper decryption like AES from crypto-js

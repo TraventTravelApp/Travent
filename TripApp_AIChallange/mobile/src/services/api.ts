@@ -28,7 +28,7 @@ function validateApiUrl(): string | null {
 // Prefer an Expo public env var for local testing, with the deployed API as fallback.
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
-  'https://gaq4nwm4l6.execute-api.us-east-1.amazonaws.com/dev';
+  'https://02qxzqxjjd.execute-api.us-east-1.amazonaws.com/dev';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -55,7 +55,7 @@ async function fetchApi<T>(
   try {
     // Use id_token for API authentication (contains user identity)
     const encryptedToken = await AsyncStorage.getItem('id_token');
-    const token = decrypt(encryptedToken);
+    const token = encryptedToken ? decrypt(encryptedToken) : null;
     logger.debug('[API] Token:', token ? 'Present' : 'MISSING');
 
     const headers: HeadersInit = {

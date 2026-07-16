@@ -1,78 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, Trip } from '../types';
+import { api } from '../services/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShareTrip'>;
 
-interface ShareableTrip {
-  id: string;
-  name: string;
-  location: string;
-  dates: string;
-  imageUrl: string;
-  isShared: boolean;
+function formatDate(isoString: string): string {
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return isoString;
+  }
 }
-
-// Mock trips data
-const mockTrips: ShareableTrip[] = [
-  {
-    id: '1',
-    name: 'Pacific Coast Highway',
-    location: 'California',
-    dates: 'Mar 15-18, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=800',
-    isShared: false,
-  },
-  {
-    id: '2',
-    name: 'Desert Canyon Adventu',
-    location: 'Arizona & Utah',
-    dates: 'Apr 22-25, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1434394673726-e8232a5903b4?w=800',
-    isShared: true,
-  },
-];
 
 export default function ShareTripScreen({ navigation, route }: Props) {
   const { friendId, friendName } = route.params;
-  const [trips, setTrips] = useState<ShareableTrip[]>(mockTrips);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadTrips();
+  }, []);
+
+  const loadTrips = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get<Trip[]>('/trips');
+      if (response.success && response.data) {
+        setTrips(response.data);
+      }
+    } catch (err) {
+      // Trips list stays empty
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleClose = () => {
     navigation.goBack();
   };
 
-  const handleShareTrip = (trip: ShareableTrip) => {
-    if (trip.isShared) {
-      Alert.alert('Already Shared', `This trip is already shared with ${friendName}`);
-      return;
+  const handleShareTrip = async (trip: Trip) => {
+    try {
+      setSharingId(trip.trip_id);
+      const response = await api.post(`/trips/${trip.trip_id}/share`, { friend_id: friendId });
+      if (response.success) {
+        Alert.alert(
+          'Trip Shared',
+          `${trip.destination || 'Your trip'} has been shared with ${friendName}!`
+        );
+      } else {
+        Alert.alert('Error', response.error || 'Failed to share trip');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setSharingId(null);
     }
+  };
 
-    // TODO: Share trip with friend via backend
-    Alert.alert(
-      'Trip Shared',
-      `${trip.name} has been shared with ${friendName}!`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Update local state to mark as shared
-            setTrips(trips.map(t =>
-              t.id === trip.id ? { ...t, isShared: true } : t
-            ));
-          },
-        },
-      ]
-    );
+  const getTripDisplayName = (trip: Trip): string => {
+    if (trip.destination) return trip.destination;
+    if (trip.type === 'roadtrip') return 'Road Trip';
+    return 'Trip';
   };
 
   return (
@@ -97,44 +99,50 @@ export default function ShareTripScreen({ navigation, route }: Props) {
             Select which trip you'd like to share with {friendName}. They'll be able to view, edit, and add activities.
           </Text>
 
-          {/* Trip List */}
-          <View style={styles.tripsList}>
-            {trips.map((trip) => (
-              <TouchableOpacity
-                key={trip.id}
-                style={styles.tripCard}
-                onPress={() => handleShareTrip(trip)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.tripLeft}>
-                  <View style={styles.tripImageContainer}>
-                    <Image
-                      source={{ uri: trip.imageUrl }}
-                      style={styles.tripImage}
-                      resizeMode="cover"
-                    />
-                  </View>
-                  <View style={styles.tripInfo}>
-                    <Text style={styles.tripName}>{trip.name}</Text>
-                    <Text style={styles.tripLocation}>{trip.location}</Text>
-                    <Text style={styles.tripDates}>{trip.dates}</Text>
-                  </View>
-                </View>
-                <View style={styles.tripRight}>
-                  {trip.isShared ? (
-                    <View style={styles.sharedIndicator}>
-                      <Text style={styles.checkmark}>✓</Text>
-                      <Text style={styles.sharedText}>Shared</Text>
+          {/* Loading / Empty / List */}
+          {loading ? (
+            <View style={styles.centeredState}>
+              <ActivityIndicator size="large" color="#1F3D2B" />
+            </View>
+          ) : trips.length === 0 ? (
+            <View style={styles.centeredState}>
+              <Text style={styles.emptyText}>No trips yet. Create a trip first to share it!</Text>
+            </View>
+          ) : (
+            <View style={styles.tripsList}>
+              {trips.map((trip) => (
+                <TouchableOpacity
+                  key={trip.trip_id}
+                  style={styles.tripCard}
+                  onPress={() => handleShareTrip(trip)}
+                  activeOpacity={0.7}
+                  disabled={sharingId === trip.trip_id}
+                >
+                  <View style={styles.tripLeft}>
+                    <View style={styles.tripColorBlock}>
+                      <Text style={styles.tripColorBlockText}>
+                        {getTripDisplayName(trip).slice(0, 2).toUpperCase()}
+                      </Text>
                     </View>
-                  ) : (
-                    <View style={styles.shareIconButton}>
-                      <Text style={styles.shareIconText}>⤴</Text>
+                    <View style={styles.tripInfo}>
+                      <Text style={styles.tripName}>{getTripDisplayName(trip)}</Text>
+                      <Text style={styles.tripStatus}>{trip.status}</Text>
+                      <Text style={styles.tripDates}>{formatDate(trip.created_at)}</Text>
                     </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  </View>
+                  <View style={styles.tripRight}>
+                    {sharingId === trip.trip_id ? (
+                      <ActivityIndicator size="small" color="#1F3D2B" />
+                    ) : (
+                      <View style={styles.shareIconButton}>
+                        <Text style={styles.shareIconText}>⤴</Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -194,6 +202,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 24,
   },
+  centeredState: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
   tripsList: {
     gap: 12,
   },
@@ -211,16 +229,18 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
-  tripImageContainer: {
+  tripColorBlock: {
     width: 60,
     height: 60,
     borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#D4C3B0',
+    backgroundColor: '#D87C52',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  tripImage: {
-    width: '100%',
-    height: '100%',
+  tripColorBlockText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   tripInfo: {
     flex: 1,
@@ -231,10 +251,11 @@ const styles = StyleSheet.create({
     color: '#1F3D2B',
     marginBottom: 4,
   },
-  tripLocation: {
+  tripStatus: {
     fontSize: 14,
     color: '#666',
     marginBottom: 2,
+    textTransform: 'capitalize',
   },
   tripDates: {
     fontSize: 13,
@@ -242,30 +263,17 @@ const styles = StyleSheet.create({
   },
   tripRight: {
     marginLeft: 8,
-  },
-  shareIconButton: {
     width: 32,
     height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareIconButton: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   shareIconText: {
     fontSize: 18,
     color: '#1F3D2B',
-  },
-  sharedIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  checkmark: {
-    fontSize: 16,
-    color: '#6B9080',
-    fontWeight: '700',
-  },
-  sharedText: {
-    fontSize: 14,
-    color: '#6B9080',
-    fontWeight: '500',
   },
 });

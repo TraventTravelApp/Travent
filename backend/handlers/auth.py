@@ -73,6 +73,7 @@ def signup(event, context):
         except cognito.exceptions.InvalidPasswordException as e:
             return error_response(400, "Invalid password")
         except Exception as e:
+            print(f"[AUTH] Signup Cognito error: {str(e)}")
             return error_response(500, "Authentication service error")
         
     except Exception as e:
@@ -139,7 +140,7 @@ def login(event, context):
             print(f"[AUTH] User not confirmed: {str(e)}")
             return error_response(401, "User email not verified. Please check your email.")
         except Exception as e:
-            print(f"[AUTH] Cognito error: Authentication service error")
+            print(f"[AUTH] Cognito error: {str(e)}")
             return error_response(500, "Authentication service error")
 
     except Exception as e:

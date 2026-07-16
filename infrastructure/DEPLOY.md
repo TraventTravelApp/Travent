@@ -158,8 +158,8 @@ DYNAMODB_TABLE_NAME=trip-planner-trips
 ### `dev` (current — exists now)
 
 - The live development environment.
-- API Gateway URL: `https://1w6itm4sqj.execute-api.us-east-1.amazonaws.com/dev`
-- Cognito User Pool: `us-east-1_fN4gzHqjT`
+- API Gateway URL: `https://02qxzqxjjd.execute-api.us-east-1.amazonaws.com/dev`
+- Cognito User Pool: `us-east-1_kaKxwSH2b`
 - All active development and testing happens here.
 - Mobile app points at this URL.
 

@@ -10,7 +10,7 @@ info:
     name: C_O1 Engineering
 
 servers:
-  - url: https://api.example.com/v1
+  - url: https://02qxzqxjjd.execute-api.us-east-1.amazonaws.com/dev
     description: Production (replace with actual API Gateway URL)
   - url: https://api-staging.example.com/v1
     description: Staging
