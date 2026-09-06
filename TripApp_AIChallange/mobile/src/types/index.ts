@@ -60,6 +60,10 @@ export type RootStackParamList = {
   InterestQuiz: undefined;
   Login: undefined;
   Signup: undefined;
+  VerifyEmail: { email: string; mode: 'signup' | 'login' };
+  ForgotPassword: undefined;
+  ResetPasswordCode: { email: string };
+  ResetPassword: { email: string; code: string };
   Home: undefined;
   NewTrip: undefined;
   TripQuestionnaire: { type: 'location' | 'roadtrip' };

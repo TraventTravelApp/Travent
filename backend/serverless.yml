@@ -46,6 +46,8 @@ provider:
             - cognito-idp:ConfirmSignUp
             - cognito-idp:ResendConfirmationCode
             - cognito-idp:GetUser
+            - cognito-idp:ForgotPassword
+            - cognito-idp:ConfirmForgotPassword
           Resource:
             - "arn:aws:cognito-idp:${self:provider.region}:*:userpool/*"
         - Effect: Allow
@@ -103,6 +105,22 @@ functions:
     events:
       - http:
           path: auth/resend
+          method: post
+          cors: true
+
+  forgotPassword:
+    handler: handlers/auth.forgot_password
+    events:
+      - http:
+          path: auth/forgot-password
+          method: post
+          cors: true
+
+  confirmForgotPassword:
+    handler: handlers/auth.confirm_forgot_password
+    events:
+      - http:
+          path: auth/confirm-forgot-password
           method: post
           cors: true
 

@@ -38,7 +38,7 @@ export interface ApiResponse<T = any> {
 
 async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & { skipAuth?: boolean } = {}
 ): Promise<ApiResponse<T>> {
   // TEMPORARY: Skip backend calls if no API_BASE_URL is set
   if (!API_BASE_URL) {
@@ -49,30 +49,35 @@ async function fetchApi<T>(
     };
   }
 
+  const { skipAuth = false, ...fetchOptions } = options;
   const fullUrl = `${API_BASE_URL}${endpoint}`;
-  logger.debug(`[API] ${options.method || 'GET'} ${fullUrl}`);
+  logger.debug(`[API] ${fetchOptions.method || 'GET'} ${fullUrl}`);
 
   try {
-    // Use id_token for API authentication (contains user identity)
-    const encryptedToken = await AsyncStorage.getItem('id_token');
-    const token = encryptedToken ? decrypt(encryptedToken) : null;
-    logger.debug('[API] Token:', token ? 'Present' : 'MISSING');
-
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...fetchOptions.headers,
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      logger.debug('[API] Auth header set, token present');
+    if (!skipAuth) {
+      // Use id_token for API authentication (contains user identity)
+      const encryptedToken = await AsyncStorage.getItem('id_token');
+      const token = encryptedToken ? decrypt(encryptedToken) : null;
+      logger.debug('[API] Token:', token ? 'Present' : 'MISSING');
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        logger.debug('[API] Auth header set, token present');
+      } else {
+        logger.warn('[API] ⚠️ No token - request will likely fail auth');
+      }
     } else {
-      logger.warn('[API] ⚠️ No token - request will likely fail auth');
+      logger.debug('[API] Skipping auth header (public endpoint)');
     }
 
     logger.debug('[API] Sending request...');
     const response = await fetch(fullUrl, {
-      ...options,
+      ...fetchOptions,
       headers,
     });
     logger.debug('[API] HTTP Status:', response.status, response.statusText);
@@ -139,6 +144,14 @@ export const api = {
     fetchApi<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(body),
+    }),
+
+  // For endpoints that don't require authentication (auth flows, password reset, etc.)
+  postPublic: <T>(endpoint: string, body?: any) =>
+    fetchApi<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      skipAuth: true,
     }),
 
   put: <T>(endpoint: string, body?: any) =>

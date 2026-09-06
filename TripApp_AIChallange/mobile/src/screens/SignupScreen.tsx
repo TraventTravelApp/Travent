@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -20,15 +21,16 @@ export default function SignupScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [needsVerification, setNeedsVerification] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
-    setSuccess('');
+
+    if (!email.trim()) {
+      setError('Please enter your email address');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -43,69 +45,15 @@ export default function SignupScreen({ navigation }: Props) {
     setLoading(true);
 
     try {
-      const response = await authService.signup({ email, password });
+      const response = await authService.signup({ email: email.trim(), password });
 
       if (response.success) {
-        setSuccess('Account created! Check your email for verification code.');
-        setNeedsVerification(true);
+        // Navigate to dedicated verification screen, passing the email
+        navigation.navigate('VerifyEmail', { email: email.trim(), mode: 'signup' });
       } else {
-        // TEMPORARY: If backend not configured, skip to home for testing
-        if (response.error?.includes('Backend not configured')) {
-          setSuccess('Demo mode: Skipping to app (backend not deployed yet)');
-          setTimeout(() => {
-            navigation.navigate('Home');
-          }, 1000);
-        } else {
-          setError(response.error || 'Failed to create account');
-        }
+        setError(response.error || 'Failed to create account');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerification = async () => {
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      const response = await authService.confirmEmail({
-        email,
-        code: verificationCode,
-      });
-
-      if (response.success) {
-        setSuccess('Email verified! You can now log in.');
-        setTimeout(() => {
-          navigation.navigate('Login');
-        }, 1500);
-      } else {
-        setError(response.error || 'Invalid verification code');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      const response = await authService.resendCode({ email });
-
-      if (response.success) {
-        setSuccess('Verification code resent! Check your email.');
-      } else {
-        setError(response.error || 'Failed to resend code');
-      }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -132,133 +80,86 @@ export default function SignupScreen({ navigation }: Props) {
             />
           </View>
 
-          {!needsVerification ? (
-            <>
-              {/* Title */}
-              <Text style={styles.title}>Welcome back, explorer</Text>
-              <Text style={styles.subtitle}>Create your account to start planning</Text>
+          {/* Title */}
+          <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.subtitle}>Start planning your next adventure</Text>
 
-              {/* Form Card */}
-              <View style={styles.formCard}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="your@email.com"
-                    placeholderTextColor="#999"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
+          {/* Form Card */}
+          <View style={styles.formCard}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="your@email.com"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+              />
+            </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="At least 8 characters (uppercase, lowercase, number)"
-                    placeholderTextColor="#999"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                  />
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="At least 8 characters"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                textContentType="newPassword"
+              />
+            </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirm Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm your password"
-                    placeholderTextColor="#999"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                  />
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm your password"
+                placeholderTextColor="#999"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                textContentType="newPassword"
+              />
+            </View>
 
-                {error ? <Text style={styles.error}>{error}</Text> : null}
-                {success ? <Text style={styles.success}>{success}</Text> : null}
-
-                <TouchableOpacity
-                  style={[
-                    styles.createButton,
-                    (loading || !email || !password || !confirmPassword) && styles.createButtonDisabled,
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={loading || !email || !password || !confirmPassword}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.createButtonText}>
-                    {loading ? 'Creating Account...' : 'Create Account'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('Login')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.loginLink}>
-                    Already have an account? <Text style={styles.loginLinkBold}>Log in</Text>
-                  </Text>
-                </TouchableOpacity>
+            {error ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.error}>{error}</Text>
               </View>
-            </>
-          ) : (
-            <>
-              {/* Verification Screen */}
-              <Text style={styles.title}>Verify Your Email</Text>
-              <Text style={styles.subtitle}>We sent a code to {email}</Text>
+            ) : null}
 
-              <View style={styles.formCard}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Verification Code</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter 6-digit code"
-                    placeholderTextColor="#999"
-                    value={verificationCode}
-                    onChangeText={setVerificationCode}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                  />
-                </View>
+            <TouchableOpacity
+              style={[
+                styles.createButton,
+                (loading || !email || !password || !confirmPassword) && styles.createButtonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={loading || !email || !password || !confirmPassword}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Create account"
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.createButtonText}>Create Account</Text>
+              )}
+            </TouchableOpacity>
 
-                {error ? <Text style={styles.error}>{error}</Text> : null}
-                {success ? <Text style={styles.success}>{success}</Text> : null}
-
-                <TouchableOpacity
-                  style={[
-                    styles.createButton,
-                    (loading || !verificationCode) && styles.createButtonDisabled,
-                  ]}
-                  onPress={handleVerification}
-                  disabled={loading || !verificationCode}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.createButtonText}>
-                    {loading ? 'Verifying...' : 'Verify Email'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.resendButton}
-                  onPress={handleResendCode}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.resendButtonText}>Resend Code</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => setNeedsVerification(false)} activeOpacity={0.7}>
-                  <Text style={styles.loginLink}>
-                    <Text style={styles.loginLinkBold}>← Back to Sign Up</Text>
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.loginLink}>
+                Already have an account? <Text style={styles.loginLinkBold}>Log in</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Back to quiz link */}
           <TouchableOpacity

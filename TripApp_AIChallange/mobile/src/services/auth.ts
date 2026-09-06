@@ -43,13 +43,31 @@ export interface ResendCodeResponse {
   message: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ConfirmForgotPasswordRequest {
+  email: string;
+  code: string;
+  new_password: string;
+}
+
+export interface ConfirmForgotPasswordResponse {
+  message: string;
+}
+
 export const authService = {
   /**
    * Sign up a new user
    * Note: User must verify email before logging in
    */
   signup: async (data: SignupRequest): Promise<ApiResponse<SignupResponse>> => {
-    return api.post<SignupResponse>('/auth/signup', data);
+    return api.postPublic<SignupResponse>('/auth/signup', data);
   },
 
   /**
@@ -57,7 +75,7 @@ export const authService = {
    * Returns tokens for authenticated requests
    */
   login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-    const response = await api.post<LoginResponse>('/auth/login', data);
+    const response = await api.postPublic<LoginResponse>('/auth/login', data);
 
     // Store tokens if login successful
     if (response.success && response.data) {
@@ -75,14 +93,30 @@ export const authService = {
    * Confirm email with verification code
    */
   confirmEmail: async (data: ConfirmEmailRequest): Promise<ApiResponse<ConfirmEmailResponse>> => {
-    return api.post<ConfirmEmailResponse>('/auth/confirm', data);
+    return api.postPublic<ConfirmEmailResponse>('/auth/confirm', data);
   },
 
   /**
    * Resend verification code
    */
   resendCode: async (data: ResendCodeRequest): Promise<ApiResponse<ResendCodeResponse>> => {
-    return api.post<ResendCodeResponse>('/auth/resend', data);
+    return api.postPublic<ResendCodeResponse>('/auth/resend', data);
+  },
+
+  /**
+   * Initiate forgot-password flow — sends a reset code to the user's email
+   */
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<ApiResponse<ForgotPasswordResponse>> => {
+    return api.postPublic<ForgotPasswordResponse>('/auth/forgot-password', data);
+  },
+
+  /**
+   * Complete forgot-password flow — verifies the reset code and sets a new password
+   */
+  confirmForgotPassword: async (
+    data: ConfirmForgotPasswordRequest
+  ): Promise<ApiResponse<ConfirmForgotPasswordResponse>> => {
+    return api.postPublic<ConfirmForgotPasswordResponse>('/auth/confirm-forgot-password', data);
   },
 
   /**

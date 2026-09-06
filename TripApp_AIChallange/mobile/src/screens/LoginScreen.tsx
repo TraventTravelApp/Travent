@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -21,54 +22,40 @@ export default function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [unverified, setUnverified] = useState(false);
 
   const handleSubmit = async () => {
     setError('');
+    setUnverified(false);
     setLoading(true);
-    setShowVerificationPrompt(false);
 
     try {
       const response = await authService.login({ email, password });
 
       if (response.success) {
-        // Login successful, navigate to home
         navigation.navigate('Home');
       } else {
-        // Check if user needs to verify email
-        if (response.error?.includes('not verified') || response.error?.includes('UserNotConfirmedException')) {
-          setError('Your email is not verified yet.');
-          setShowVerificationPrompt(true);
+        // Unverified account — send them to VerifyEmail directly
+        if (
+          response.error?.includes('not verified') ||
+          response.error?.includes('UserNotConfirmedException')
+        ) {
+          setUnverified(true);
+          setError('Your email isn\'t verified yet.');
         } else {
-          // Show error message from API
-          setError(response.error || 'Login failed');
+          setError(response.error || 'Login failed. Check your credentials and try again.');
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendCode = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await authService.resendCode({ email });
-      if (response.success) {
-        setError('');
-        // Navigate to signup screen in verification mode
-        navigation.navigate('Signup');
-      } else {
-        setError(response.error || 'Failed to resend code');
-      }
-    } catch (err) {
-      setError('Failed to resend verification code');
-    } finally {
-      setLoading(false);
-    }
+  const handleGoVerify = () => {
+    // Navigate straight to VerifyEmail; the screen will handle resending
+    navigation.navigate('VerifyEmail', { email: email.trim(), mode: 'login' });
   };
 
   return (
@@ -104,10 +91,11 @@ export default function LoginScreen({ navigation }: Props) {
                 placeholder="your@email.com"
                 placeholderTextColor="#999"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(v) => { setEmail(v); setUnverified(false); setError(''); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                textContentType="emailAddress"
               />
             </View>
 
@@ -118,22 +106,25 @@ export default function LoginScreen({ navigation }: Props) {
                 placeholder="Enter your password"
                 placeholderTextColor="#999"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(v) => { setPassword(v); setError(''); }}
                 secureTextEntry
+                textContentType="password"
               />
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            {showVerificationPrompt && (
+            {/* Unverified prompt — directs user to VerifyEmail screen */}
+            {unverified && (
               <TouchableOpacity
                 style={styles.verificationPrompt}
-                onPress={handleResendCode}
-                disabled={loading}
+                onPress={handleGoVerify}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Verify your email"
               >
                 <Text style={styles.verificationPromptText}>
-                  📧 Resend Verification Code
+                  📧 Verify your email →
                 </Text>
               </TouchableOpacity>
             )}
@@ -146,10 +137,14 @@ export default function LoginScreen({ navigation }: Props) {
               onPress={handleSubmit}
               disabled={loading || !email || !password}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Log in"
             >
-              <Text style={styles.loginButtonText}>
-                {loading ? 'Logging in...' : 'Log In'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.loginButtonText}>Log In</Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -159,6 +154,14 @@ export default function LoginScreen({ navigation }: Props) {
               <Text style={styles.signupLink}>
                 Don't have an account? <Text style={styles.signupLinkBold}>Sign up</Text>
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              activeOpacity={0.7}
+              style={styles.forgotRow}
+            >
+              <Text style={styles.forgotLink}>Forgot your password?</Text>
             </TouchableOpacity>
           </View>
 
@@ -269,6 +272,15 @@ const styles = StyleSheet.create({
   signupLinkBold: {
     fontWeight: '600',
     color: '#1F3D2B',
+  },
+  forgotRow: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  forgotLink: {
+    fontSize: 14,
+    color: '#666',
+    textDecorationLine: 'underline',
   },
   backButton: {
     marginTop: 24,

@@ -24,6 +24,10 @@ import TripListViewScreen from '../screens/TripListViewScreen';
 import TripMapViewScreen from '../screens/TripMapViewScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ManualTripBuilderScreen from '../screens/ManualTripBuilderScreen';
+import VerifyEmailScreen from '../screens/VerifyEmailScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordCodeScreen from '../screens/ResetPasswordCodeScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -41,6 +45,10 @@ export default function AppNavigator() {
         <Stack.Screen name="InterestQuiz" component={InterestQuizScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPasswordCode" component={ResetPasswordCodeScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="NewTrip" component={NewTripScreen} />
         <Stack.Screen name="TripQuestionnaire" component={TripQuestionnaireScreen} />

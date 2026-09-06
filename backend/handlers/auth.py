@@ -206,3 +206,82 @@ def resend_confirmation(event, context):
         
     except Exception as e:
         return error_response(500, "Authentication service error")
+
+
+@handle_errors
+def forgot_password(event, context):
+    """Initiate forgot-password flow — sends a reset code to the user's email"""
+    print("[AUTH] Forgot password handler called")
+    try:
+        body = json.loads(event['body'])
+        email = body.get('email')
+
+        if not email:
+            return error_response(400, "Email required")
+
+        try:
+            cognito.forgot_password(
+                ClientId=CLIENT_ID,
+                Username=email
+            )
+
+            # Always return success to avoid leaking whether the email exists
+            return success_response({
+                'message': 'If an account with that email exists, a reset code has been sent.'
+            })
+
+        except cognito.exceptions.UserNotFoundException:
+            # Return the same success message — don't leak account existence
+            return success_response({
+                'message': 'If an account with that email exists, a reset code has been sent.'
+            })
+        except cognito.exceptions.InvalidParameterException as e:
+            # User exists but is unconfirmed — can't reset password yet
+            return error_response(400, "Account email is not verified. Please verify your email first.")
+        except Exception as e:
+            print(f"[AUTH] Forgot password Cognito error: {str(e)}")
+            return error_response(500, "Authentication service error")
+
+    except Exception as e:
+        return error_response(500, "Authentication service error")
+
+
+@handle_errors
+def confirm_forgot_password(event, context):
+    """Confirm forgot-password — verify reset code and set new password"""
+    print("[AUTH] Confirm forgot password handler called")
+    try:
+        body = json.loads(event['body'])
+        email = body.get('email')
+        code = body.get('code')
+        new_password = body.get('new_password')
+
+        if not email or not code or not new_password:
+            return error_response(400, "Email, code, and new_password are required")
+
+        try:
+            cognito.confirm_forgot_password(
+                ClientId=CLIENT_ID,
+                Username=email,
+                ConfirmationCode=code,
+                Password=new_password
+            )
+
+            return success_response({
+                'message': 'Password reset successfully. You can now log in with your new password.'
+            })
+
+        except cognito.exceptions.CodeMismatchException:
+            return error_response(400, "Invalid reset code")
+        except cognito.exceptions.ExpiredCodeException:
+            return error_response(400, "Reset code has expired. Please request a new one.")
+        except cognito.exceptions.InvalidPasswordException:
+            return error_response(400, "Password does not meet requirements. Use at least 8 characters with uppercase, lowercase, and a number.")
+        except cognito.exceptions.UserNotFoundException:
+            return error_response(404, "No account found with that email address")
+        except Exception as e:
+            print(f"[AUTH] Confirm forgot password Cognito error: {str(e)}")
+            return error_response(500, "Authentication service error")
+
+    except Exception as e:
+        return error_response(500, "Authentication service error")
